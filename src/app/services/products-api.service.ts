@@ -4,34 +4,44 @@ import { ApiResult } from '../models/api-result.model';
 import { HttpResponseModel } from '../models/http-response.model';
 import { PagedResult } from '../models/paged-result.model';
 import { normalizeApiResponse } from '../models/normalize-api-response';
+import {
+  ProductDto,
+  ProductRequest,
+  ProductVerificationLogEntry,
+  ProductVerificationStatus
+} from '../models/product.model';
 import { PublicService } from './public.service';
 
-export interface ProductDto {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  isActive: boolean;
-}
-
-export interface ProductRequest {
-  name: string;
-  description: string;
-  price: number;
-  isActive?: boolean;
-}
+export type { ProductDto, ProductRequest };
 
 @Injectable({ providedIn: 'root' })
 export class ProductsApiService {
   private readonly publicService = inject(PublicService);
   private readonly controller = 'products';
 
-  getPaged(pageNumber: number, pageSize: number, searchedValue = ''): Observable<ApiResult<PagedResult<ProductDto>>> {
-    return this.publicService.getFilterPaginationData<ProductDto>(
-      this.controller,
-      { isPaginationRequest: true, pageNumber, pageSize },
-      { searchedValue, columnsKey: ['name', 'description'] }
-    ).pipe(map((response) => this.normalize(response)));
+  getPaged(
+    pageNumber: number,
+    pageSize: number,
+    searchedValue = '',
+    verificationStatus: ProductVerificationStatus | '' = ''
+  ): Observable<ApiResult<PagedResult<ProductDto>>> {
+    const params: Record<string, unknown> = { pageNumber, pageSize, SearchedValue: searchedValue };
+    if (verificationStatus) {
+      params['verificationStatus'] = verificationStatus;
+    }
+
+    return this.publicService.getData<HttpResponseModel<PagedResult<ProductDto>>>(this.controller, params)
+      .pipe(map((response) => this.normalize(response)));
+  }
+
+  setVerification(id: string, status: ProductVerificationStatus): Observable<ApiResult<ProductDto>> {
+    return this.publicService.put<HttpResponseModel<ProductDto>>({ status }, this.controller, `${id}/verification`)
+      .pipe(map((response) => this.normalize(response)));
+  }
+
+  getVerificationHistory(id: string): Observable<ApiResult<ProductVerificationLogEntry[]>> {
+    return this.publicService.getAll<ProductVerificationLogEntry>(`${this.controller}/${id}/verification-history`)
+      .pipe(map((response) => this.normalize(response)));
   }
 
   create(request: ProductRequest): Observable<ApiResult<ProductDto>> {
