@@ -1,0 +1,49 @@
+<section class="products-page">
+  <header>
+    <div>
+      <p class="eyebrow">Starter reference feature</p>
+      <h1>Products</h1>
+    </div>
+    <div class="search-row">
+      <input [(ngModel)]="searchTerm" placeholder="Search products" (keyup.enter)="search()" />
+      <button type="button" (click)="search()">Search</button>
+    </div>
+  </header>
+
+  <form class="product-form" (ngSubmit)="save()">
+    <input name="name" [(ngModel)]="formValue.name" placeholder="Product name" required />
+    <input name="description" [(ngModel)]="formValue.description" placeholder="Description" />
+    <input name="price" type="number" min="0" step="0.01" [(ngModel)]="formValue.price" required />
+    @if (editingId()) {
+      <label><input name="isActive" type="checkbox" [(ngModel)]="formValue.isActive" /> Active</label>
+    }
+    <button type="submit" [disabled]="isSaving()">{{ editingId() ? 'Save changes' : 'Add product' }}</button>
+    @if (editingId()) { <button type="button" (click)="resetForm()">Cancel</button> }
+  </form>
+
+  @if (isLoading()) {
+    <p class="state">Loading products...</p>
+  } @else if (loadError()) {
+    <p class="state">Products could not be loaded. Check the API connection.</p>
+  } @else if (products().length === 0) {
+    <p class="state">No products found.</p>
+  } @else {
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Name</th><th>Description</th><th>Price</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+          @for (product of products(); track product.id) {
+            <tr>
+              <td>{{ product.name }}</td>
+              <td>{{ product.description || '-' }}</td>
+              <td>{{ product.price | currency }}</td>
+              <td>{{ product.isActive ? 'Active' : 'Inactive' }}</td>
+              <td><button type="button" (click)="edit(product)">Edit</button><button type="button" (click)="remove(product)">Delete</button></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <nav class="pagination"><button type="button" (click)="previousPage()" [disabled]="pageNumber() === 1">Previous</button><span>Page {{ pageNumber() }} of {{ totalPages() }}</span><button type="button" (click)="nextPage()" [disabled]="pageNumber() === totalPages()">Next</button></nav>
+  }
+</section>
