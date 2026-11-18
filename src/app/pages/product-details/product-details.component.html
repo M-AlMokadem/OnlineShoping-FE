@@ -12,10 +12,17 @@
         <img class="image" [src]="p.imageUrl" [alt]="translation.localized(p.name, p.nameAr)">
       }
       <div class="summary">
-        <p class="eyebrow">{{ p.brand }} · {{ 'category.' + p.category | t }}</p>
+        <p class="eyebrow">{{ p.brandName }} · {{ translation.localized(p.categoryName, p.categoryNameAr) }}</p>
         <h1>{{ translation.localized(p.name, p.nameAr) }}</h1>
-        <p class="price">{{ p.price | currency: p.currency : 'symbol' : '1.0-0' }}</p>
+        <p class="price">
+          {{ p.price | currency: p.currency : 'symbol' : '1.0-0' }}
+          @if (p.originalPrice) {
+            <s class="original">{{ p.originalPrice | currency: p.currency : 'symbol' : '1.0-0' }}</s>
+          }
+        </p>
+        @if (p.sku) { <p class="sku">{{ 'details.sku' | t }}: {{ p.sku }}</p> }
         <p class="availability" [class.out]="p.availability === 'OutOfStock'">{{ 'availability.' + p.availability | t }}</p>
+        <p>{{ translation.localized(p.shortDescription, p.shortDescriptionAr) }}</p>
         <p>{{ translation.localized(p.description, p.descriptionAr) }}</p>
         <button mat-flat-button type="button" (click)="toggleCompare(p)">
           {{ (compare.has(p.id) ? 'details.removeFromCompare' : 'details.addToCompare') | t }}
@@ -31,19 +38,6 @@
           <dd>{{ spec.value }}</dd>
         }
       </dl>
-    </section>
-
-    <section class="block">
-      <h2>{{ 'details.source' | t }}</h2>
-      <dl>
-        <dt>{{ 'details.sourceName' | t }}</dt>
-        <dd>{{ p.sourceName || ('common.noValue' | t) }}</dd>
-        <dt>{{ 'details.verifiedOn' | t }}</dt>
-        <dd>{{ p.verifiedOn ? (p.verifiedOn | date: 'mediumDate') : ('common.noValue' | t) }}</dd>
-      </dl>
-      @if (p.sourceUrl) {
-        <a mat-stroked-button [href]="p.sourceUrl" target="_blank" rel="noopener noreferrer">{{ 'details.goToRetailer' | t }}</a>
-      }
     </section>
   }
 </section>

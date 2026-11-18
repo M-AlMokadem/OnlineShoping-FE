@@ -12,3 +12,5 @@ dl { display: grid; grid-template-columns: max-content 1fr; gap: 0.4rem 1.2rem; 
 dt { color: #4f5f85; }
 dd { margin: 0; }
 @media (max-width: 800px) { .layout { grid-template-columns: 1fr; } }
+.original { margin-inline-start: 0.4rem; font-weight: 400; color: #7a86a6; }
+.sku { margin: 0; color: #4f5f85; font-size: 0.9rem; }

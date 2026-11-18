@@ -1,4 +1,4 @@
-import { CurrencyPipe, DatePipe, KeyValuePipe } from '@angular/common';
+import { CurrencyPipe, KeyValuePipe } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -14,7 +14,7 @@ import { ToastService } from '../../services/toast.service';
 @Component({
   selector: 'app-product-details',
   standalone: true,
-  imports: [CurrencyPipe, DatePipe, KeyValuePipe, RouterLink, MatButtonModule, PageStateComponent, TranslatePipe],
+  imports: [CurrencyPipe, KeyValuePipe, RouterLink, MatButtonModule, PageStateComponent, TranslatePipe],
   templateUrl: './product-details.component.html',
   styleUrl: './product-details.component.css'
 })

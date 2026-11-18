@@ -8,6 +8,7 @@ export interface AuthUser {
 	fullName: string;
 	email: string;
 	roles: string[];
+	permissions: string[];
 }
 
 export interface LoginPayload {
@@ -48,6 +49,28 @@ export class AuthService {
 	hasRole(role: string): boolean {
 		const roles = this.currentUser()?.roles ?? [];
 		return roles.includes(role);
+	}
+
+	hasPermission(permission: string): boolean {
+		return (this.currentUser()?.permissions ?? []).includes(permission);
+	}
+
+	hasAnyPermission(permissions: readonly string[]): boolean {
+		return permissions.some((permission) => this.hasPermission(permission));
+	}
+
+	async loadProfile(): Promise<void> {
+		const session = this.sessionState();
+		if (!session) {
+			return;
+		}
+
+		const profile = await firstValueFrom(this.httpClient.get<AuthUser>(`${this.authApiUrl}/me`));
+		if (!this.sessionState()) {
+			return;
+		}
+
+		this.persistSession({ ...this.sessionState()!, user: { ...profile, roles: profile.roles ?? [], permissions: profile.permissions ?? [] } });
 	}
 
 	async login(payload: LoginPayload): Promise<void> {
@@ -141,7 +164,8 @@ export class AuthService {
 				refreshTokenExpiresAtUtc: session.refreshTokenExpiresAtUtc ?? '',
 				user: {
 					...session.user,
-					roles: session.user.roles ?? []
+					roles: session.user.roles ?? [],
+					permissions: session.user.permissions ?? []
 				}
 			};
 		} catch {

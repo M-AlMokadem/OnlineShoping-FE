@@ -13,20 +13,27 @@ function product(id: string, specifications: Record<string, string>, price = 100
     id,
     name: `Phone ${id}`,
     nameAr: '',
+    sku: `SKU-${id}`,
+    shortDescription: '',
+    shortDescriptionAr: '',
     description: '',
     descriptionAr: '',
-    brand: 'Samsung',
-    category: 'MobilePhone',
+    categoryId: 'cat-1',
+    categoryName: 'Phones',
+    categoryNameAr: '',
+    brandId: 'brand-1',
+    brandName: 'Samsung',
     price,
+    originalPrice: null,
     currency: 'EGP',
+    stockQuantity: 5,
     availability: 'InStock',
     imageUrl: null,
     specifications,
-    sourceName: 'Retailer',
-    sourceUrl: null,
-    verificationStatus: 'Verified',
-    verifiedOn: null,
-    isActive: true
+    status: 'Published',
+    createdOn: '2026-01-01T00:00:00Z',
+    lastUpdatedOn: '2026-01-01T00:00:00Z',
+    lastUpdatedBy: 'admin'
   };
 }
 
@@ -43,8 +50,8 @@ describe('CompareComponent', () => {
 
   it('highlights only the rows whose values differ', async () => {
     const selection = TestBed.inject(CompareSelectionService);
-    selection.add({ id: 'a', category: 'MobilePhone' });
-    selection.add({ id: 'b', category: 'MobilePhone' });
+    selection.add({ id: 'a', categoryId: 'cat-1' });
+    selection.add({ id: 'b', categoryId: 'cat-1' });
 
     const fixture = TestBed.createComponent(CompareComponent);
     fixture.detectChanges();

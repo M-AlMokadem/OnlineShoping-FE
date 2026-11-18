@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './guards/auth.guard';
+import { unsavedChangesGuard } from './guards/unsaved-changes.guard';
 
 export const routes: Routes = [
 	{
@@ -33,14 +34,40 @@ export const routes: Routes = [
 	{
 		path: 'users',
 		canActivate: [authGuard],
-		data: { roles: ['Admin'] },
+		data: { permissions: ['Users.Manage'] },
 		loadComponent: () => import('./pages/users/users.component').then((module) => module.UsersComponent)
 	},
 	{
 		path: 'products',
 		canActivate: [authGuard],
-		data: { roles: ['Admin', 'Seller'] },
+		data: { permissions: ['Products.View'] },
 		loadComponent: () => import('./pages/products/products.component').then((module) => module.ProductsComponent)
+	},
+	{
+		path: 'products/new',
+		canActivate: [authGuard],
+		canDeactivate: [unsavedChangesGuard],
+		data: { permissions: ['Products.Create'] },
+		loadComponent: () => import('./pages/product-form/product-form.component').then((module) => module.ProductFormComponent)
+	},
+	{
+		path: 'products/:id',
+		canActivate: [authGuard],
+		canDeactivate: [unsavedChangesGuard],
+		data: { permissions: ['Products.View'] },
+		loadComponent: () => import('./pages/product-form/product-form.component').then((module) => module.ProductFormComponent)
+	},
+	{
+		path: 'categories',
+		canActivate: [authGuard],
+		data: { permissions: ['Categories.Manage'] },
+		loadComponent: () => import('./pages/categories/categories.component').then((module) => module.CategoriesComponent)
+	},
+	{
+		path: 'brands',
+		canActivate: [authGuard],
+		data: { permissions: ['Brands.Manage'] },
+		loadComponent: () => import('./pages/brands/brands.component').then((module) => module.BrandsComponent)
 	},
 	{
 		path: '**',

@@ -6,6 +6,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { PasswordFieldComponent } from '../password-field/password-field.component';
+import { STAFF_ROLES } from '../../models/permissions';
 import { UserFormValue } from '../../models/user-form.model';
 
 @Component({
@@ -38,7 +39,9 @@ import { UserFormValue } from '../../models/user-form.model';
         <mat-label>Role</mat-label>
         <mat-select name="role" [(ngModel)]="value.role">
           <mat-option value="User">User</mat-option>
-          <mat-option value="Seller">Seller</mat-option>
+          @for (role of staffRoles; track role) {
+            <mat-option [value]="role">{{ role }}</mat-option>
+          }
         </mat-select>
       </mat-form-field>
       <button mat-flat-button color="primary" type="submit" [disabled]="isSubmitting">
@@ -55,6 +58,7 @@ import { UserFormValue } from '../../models/user-form.model';
   `]
 })
 export class UserFormComponent {
+  protected readonly staffRoles = STAFF_ROLES;
   @Input() eyebrow = 'New account';
   @Input() title = 'Create user';
   @Input() submitLabel = 'Create user';

@@ -5,10 +5,12 @@ import { HttpResponseModel } from '../models/http-response.model';
 import { PagedResult } from '../models/paged-result.model';
 import { normalizeApiResponse } from '../models/normalize-api-response';
 import {
+  ProductAuditEntry,
   ProductDto,
+  ProductListQuery,
+  ProductReadiness,
   ProductRequest,
-  ProductVerificationLogEntry,
-  ProductVerificationStatus
+  ProductStatus
 } from '../models/product.model';
 import { PublicService } from './public.service';
 
@@ -19,47 +21,50 @@ export class ProductsApiService {
   private readonly publicService = inject(PublicService);
   private readonly controller = 'products';
 
-  getPaged(
-    pageNumber: number,
-    pageSize: number,
-    searchedValue = '',
-    verificationStatus: ProductVerificationStatus | '' = ''
-  ): Observable<ApiResult<PagedResult<ProductDto>>> {
-    const params: Record<string, unknown> = { pageNumber, pageSize, SearchedValue: searchedValue };
-    if (verificationStatus) {
-      params['verificationStatus'] = verificationStatus;
-    }
+  getPaged(query: ProductListQuery): Observable<ApiResult<PagedResult<ProductDto>>> {
+    const params: Record<string, unknown> = {
+      sortBy: query.sortBy,
+      sortDirection: query.sortDirection,
+      pageSize: query.pageSize,
+      pageNumber: query.pageNumber
+    };
+    if (query.search.trim()) { params['search'] = query.search.trim(); }
+    if (query.categoryId) { params['categoryId'] = query.categoryId; }
+    if (query.brandId) { params['brandId'] = query.brandId; }
+    if (query.availability) { params['availability'] = query.availability; }
+    if (query.status) { params['status'] = query.status; }
 
     return this.publicService.getData<HttpResponseModel<PagedResult<ProductDto>>>(this.controller, params)
-      .pipe(map((response) => this.normalize(response)));
+      .pipe(map((response) => normalizeApiResponse(response)));
   }
 
-  setVerification(id: string, status: ProductVerificationStatus): Observable<ApiResult<ProductDto>> {
-    return this.publicService.put<HttpResponseModel<ProductDto>>({ status }, this.controller, `${id}/verification`)
-      .pipe(map((response) => this.normalize(response)));
-  }
-
-  getVerificationHistory(id: string): Observable<ApiResult<ProductVerificationLogEntry[]>> {
-    return this.publicService.getAll<ProductVerificationLogEntry>(`${this.controller}/${id}/verification-history`)
-      .pipe(map((response) => this.normalize(response)));
+  getById(id: string): Observable<ApiResult<ProductDto>> {
+    return this.publicService.getById<ProductDto>(this.controller, id)
+      .pipe(map((response) => normalizeApiResponse(response)));
   }
 
   create(request: ProductRequest): Observable<ApiResult<ProductDto>> {
     return this.publicService.post<HttpResponseModel<ProductDto>>(request, this.controller)
-      .pipe(map((response) => this.normalize(response)));
+      .pipe(map((response) => normalizeApiResponse(response)));
   }
 
   update(id: string, request: ProductRequest): Observable<ApiResult<ProductDto>> {
     return this.publicService.put<HttpResponseModel<ProductDto>>(request, this.controller, id)
-      .pipe(map((response) => this.normalize(response)));
+      .pipe(map((response) => normalizeApiResponse(response)));
   }
 
-  remove(id: string): Observable<ApiResult<boolean>> {
-    return this.publicService.delete<HttpResponseModel<boolean>>(this.controller, id)
-      .pipe(map((response) => this.normalize(response)));
+  setStatus(id: string, status: ProductStatus): Observable<ApiResult<ProductDto>> {
+    return this.publicService.put<HttpResponseModel<ProductDto>>({ status }, this.controller, `${id}/status`)
+      .pipe(map((response) => normalizeApiResponse(response)));
   }
 
-  private normalize<T>(response: HttpResponseModel<T>): ApiResult<T> {
-    return normalizeApiResponse(response);
+  getReadiness(id: string): Observable<ApiResult<ProductReadiness>> {
+    return this.publicService.getById<ProductReadiness>(this.controller, `${id}/readiness`)
+      .pipe(map((response) => normalizeApiResponse(response)));
+  }
+
+  getAudit(id: string): Observable<ApiResult<ProductAuditEntry[]>> {
+    return this.publicService.getById<ProductAuditEntry[]>(this.controller, `${id}/audit`)
+      .pipe(map((response) => normalizeApiResponse(response)));
   }
 }

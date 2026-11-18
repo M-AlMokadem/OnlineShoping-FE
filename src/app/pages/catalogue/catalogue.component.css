@@ -17,3 +17,4 @@ h2 { margin: 0.2rem 0; font-size: 1.05rem; }
 .availability { margin: 0.2rem 0 0; color: #106c4f; }
 .availability.out { color: #9f2c21; }
 .pager { display: flex; justify-content: center; align-items: center; gap: 1rem; }
+.original { margin-inline-start: 0.4rem; font-weight: 400; color: #7a86a6; }

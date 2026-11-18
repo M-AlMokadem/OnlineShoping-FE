@@ -36,8 +36,8 @@ export class CompareComponent implements OnInit {
     const t = (key: string) => this.translation.t(key);
     const specKeys = [...new Set(products.flatMap((product) => Object.keys(product.specifications ?? {})))];
     const rows: CompareRow[] = [
-      this.row(t('compare.brand'), products.map((product) => product.brand)),
-      this.row(t('compare.price'), products.map((product) => `${product.price} ${product.currency}`)),
+      this.row(t('compare.brand'), products.map((product) => product.brandName)),
+      this.row(t('compare.price'), products.map((product) => product.price == null ? t('common.noValue') : `${product.price} ${product.currency}`)),
       this.row(t('compare.availability'), products.map((product) => t('availability.' + product.availability))),
       ...specKeys.map((key) => this.row(key, products.map((product) => product.specifications?.[key] ?? t('common.noValue'))))
     ];

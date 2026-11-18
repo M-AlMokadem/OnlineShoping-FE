@@ -12,16 +12,16 @@
       (submitted)="search()"></app-search-field>
 
     <label>{{ 'catalogue.brand' | t }}
-      <select name="brand" [(ngModel)]="filters.brand" (ngModelChange)="search()">
+      <select name="brand" [(ngModel)]="filters.brandId" (ngModelChange)="search()">
         <option value="">{{ 'catalogue.all' | t }}</option>
-        @for (brand of brands(); track brand) { <option [value]="brand">{{ brand }}</option> }
+        @for (brand of brands(); track brand.id) { <option [value]="brand.id">{{ brand.name }}</option> }
       </select>
     </label>
 
     <label>{{ 'catalogue.category' | t }}
-      <select name="category" [(ngModel)]="filters.category" (ngModelChange)="search()">
+      <select name="category" [(ngModel)]="filters.categoryId" (ngModelChange)="search()">
         <option value="">{{ 'catalogue.all' | t }}</option>
-        @for (category of categories; track category) { <option [value]="category">{{ 'category.' + category | t }}</option> }
+        @for (category of categories(); track category.id) { <option [value]="category.id">{{ categoryName(category) }}</option> }
       </select>
     </label>
 
@@ -66,9 +66,14 @@
             <img class="thumb" [src]="product.imageUrl" [alt]="name(product)">
           }
           <mat-card-content>
-            <p class="brand">{{ product.brand }} · {{ 'category.' + product.category | t }}</p>
+            <p class="brand">{{ product.brandName }} · {{ translation.localized(product.categoryName, product.categoryNameAr) }}</p>
             <h2>{{ name(product) }}</h2>
-            <p class="price">{{ product.price | currency: product.currency : 'symbol' : '1.0-0' }}</p>
+            <p class="price">
+              {{ product.price | currency: product.currency : 'symbol' : '1.0-0' }}
+              @if (product.originalPrice) {
+                <s class="original">{{ product.originalPrice | currency: product.currency : 'symbol' : '1.0-0' }}</s>
+              }
+            </p>
             <p class="availability" [class.out]="product.availability === 'OutOfStock'">{{ 'availability.' + product.availability | t }}</p>
           </mat-card-content>
           <mat-card-actions>

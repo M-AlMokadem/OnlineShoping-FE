@@ -5,6 +5,8 @@ export interface ErrorResult {
   data?: {
     correlationId?: string;
     stackTrace?: string;
+    errors?: Record<string, string[]>;
+    missingFields?: string[];
   };
   errors?: string[] | Record<string, string[]>;
   title?: string;

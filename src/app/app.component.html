@@ -7,10 +7,16 @@
       <a mat-button routerLink="/compare" routerLinkActive="is-active">
         {{ 'nav.compare' | t }}@if (compare.count() > 0) { ({{ compare.count() }}) }
       </a>
-      @if (isAdmin() || isSeller()) {
+      @if (canViewProducts()) {
         <a mat-button routerLink="/products" routerLinkActive="is-active">{{ 'nav.adminProducts' | t }}</a>
       }
-      @if (isAdmin()) {
+      @if (canManageCategories()) {
+        <a mat-button routerLink="/categories" routerLinkActive="is-active">{{ 'nav.categories' | t }}</a>
+      }
+      @if (canManageBrands()) {
+        <a mat-button routerLink="/brands" routerLinkActive="is-active">{{ 'nav.brands' | t }}</a>
+      }
+      @if (canManageUsers()) {
         <a mat-button routerLink="/users" routerLinkActive="is-active">{{ 'nav.users' | t }}</a>
       }
       <button mat-button type="button" (click)="translation.toggle()">{{ 'nav.language' | t }}</button>

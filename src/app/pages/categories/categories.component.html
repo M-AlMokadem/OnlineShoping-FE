@@ -1,0 +1,110 @@
+<section class="page">
+  <header>
+    <h1>{{ 'categories.title' | t }}</h1>
+    <button mat-flat-button type="button" (click)="openNew()">{{ 'category.new' | t }}</button>
+  </header>
+
+  <mat-checkbox [checked]="includeArchived()" (change)="toggleArchived($event.checked)">{{ 'category.showArchived' | t }}</mat-checkbox>
+
+  @if (formOpen()) {
+    <form class="form" [formGroup]="form" (ngSubmit)="save()">
+      <h2>{{ (editing() ? 'category.edit' : 'category.new') | t }}</h2>
+      @if (otherErrors().length > 0) {
+        <ul class="notice error">
+          @for (message of otherErrors(); track message) { <li>{{ message }}</li> }
+        </ul>
+      }
+      <div class="fields">
+        <mat-form-field appearance="outline">
+          <mat-label>{{ 'admin.nameEn' | t }}</mat-label>
+          <input matInput formControlName="name">
+          <mat-error>{{ errorText('name') }}</mat-error>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>{{ 'admin.nameAr' | t }}</mat-label>
+          <input matInput formControlName="nameAr" dir="rtl">
+          <mat-error>{{ errorText('nameAr') }}</mat-error>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>{{ 'common.description' | t }}</mat-label>
+          <input matInput formControlName="description">
+          <mat-error>{{ errorText('description') }}</mat-error>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>{{ 'category.iconUrl' | t }}</mat-label>
+          <input matInput formControlName="iconUrl">
+          <mat-error>{{ errorText('iconUrl') }}</mat-error>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>{{ 'category.displayOrder' | t }}</mat-label>
+          <input matInput type="number" min="0" formControlName="displayOrder">
+          <mat-error>{{ errorText('displayOrder') }}</mat-error>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>{{ 'category.parent' | t }}</mat-label>
+          <mat-select formControlName="parentId">
+            <mat-option [value]="null">{{ 'common.noValue' | t }}</mat-option>
+            @for (parent of parentOptions(); track parent.id) { <mat-option [value]="parent.id">{{ label(parent) }}</mat-option> }
+          </mat-select>
+          <mat-error>{{ errorText('parentId') }}</mat-error>
+        </mat-form-field>
+      </div>
+      <mat-checkbox formControlName="isActive">{{ 'common.active' | t }}</mat-checkbox>
+      <div class="actions">
+        <button mat-flat-button color="primary" type="submit" [disabled]="saving()">{{ 'common.save' | t }}</button>
+        <button mat-button type="button" (click)="cancel()">{{ 'common.cancel' | t }}</button>
+      </div>
+    </form>
+  }
+
+  @if (loading()) {
+    <app-page-state kind="loading" [title]="'catalogue.loading' | t"></app-page-state>
+  } @else if (failed()) {
+    <app-page-state kind="error" [title]="'categories.loadError' | t" (retry)="load()"></app-page-state>
+  } @else if (categories().length === 0) {
+    <app-page-state kind="empty" [title]="'categories.empty' | t"></app-page-state>
+  } @else {
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>{{ 'category.order' | t }}</th>
+            <th>{{ 'admin.name' | t }}</th>
+            <th>{{ 'admin.nameAr' | t }}</th>
+            <th>{{ 'common.productCount' | t }}</th>
+            <th>{{ 'admin.status' | t }}</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (category of categories(); track category.id) {
+            <tr [class.archived]="category.isArchived">
+              <td>{{ category.displayOrder }}</td>
+              <td>{{ category.name }}</td>
+              <td>{{ category.nameAr || ('common.noValue' | t) }}</td>
+              <td>{{ category.productCount }}</td>
+              <td>
+                <span class="badge" [class.off]="!category.isActive || category.isArchived">
+                  {{ (category.isArchived ? 'common.archived' : category.isActive ? 'common.active' : 'common.inactive') | t }}
+                </span>
+              </td>
+              <td class="row-actions">
+                @if (!category.isArchived) {
+                  <button mat-button type="button" [attr.aria-label]="'category.moveUp' | t" [disabled]="!canMove(category, -1)" (click)="move(category, -1)">&uarr;</button>
+                  <button mat-button type="button" [attr.aria-label]="'category.moveDown' | t" [disabled]="!canMove(category, 1)" (click)="move(category, 1)">&darr;</button>
+                  <button mat-button type="button" (click)="edit(category)">{{ 'common.edit' | t }}</button>
+                  <button mat-button type="button" (click)="setActive(category, !category.isActive)">
+                    {{ (category.isActive ? 'common.deactivate' : 'common.activate') | t }}
+                  </button>
+                  <button mat-button type="button" (click)="archive(category)">{{ 'category.archive' | t }}</button>
+                } @else {
+                  <button mat-button type="button" (click)="restore(category)">{{ 'category.restore' | t }}</button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

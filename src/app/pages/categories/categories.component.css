@@ -1,0 +1,15 @@
+:host { display: block; }
+.page { display: grid; gap: 1rem; padding: 1rem 0 2rem; }
+header { display: flex; justify-content: space-between; align-items: center; }
+h1, h2 { margin: 0; }
+.form { display: grid; gap: 0.8rem; padding: 1.2rem; border: 1px solid #e0e5f2; border-radius: 16px; background: #fff; }
+.fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0.4rem 0.8rem; }
+.actions { display: flex; gap: 0.6rem; }
+.notice { margin: 0; padding: 0.6rem 0.8rem; border-radius: 8px; background: #fde2df; color: #9f2c21; list-style-position: inside; }
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; }
+th, td { padding: 0.6rem 0.8rem; border-bottom: 1px solid #e0e5f2; text-align: start; }
+.row-actions { white-space: nowrap; }
+.archived { opacity: 0.65; }
+.badge { padding: 0.15rem 0.6rem; border-radius: 999px; font-size: 0.8rem; background: #d9f4e8; color: #106c4f; }
+.badge.off { background: #e6e8ef; color: #4f5f85; }

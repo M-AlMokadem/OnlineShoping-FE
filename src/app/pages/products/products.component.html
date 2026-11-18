@@ -1,132 +1,117 @@
 <section class="admin">
   <header>
     <h1>{{ 'admin.title' | t }}</h1>
-    <button mat-flat-button type="button" (click)="openNew()">{{ 'admin.newProduct' | t }}</button>
+    @if (canCreate) {
+      <a mat-flat-button routerLink="/products/new">{{ 'admin.newProduct' | t }}</a>
+    }
   </header>
 
-  <div class="toolbar">
-    <app-search-field [label]="'common.search' | t" [value]="searchTerm" (valueChange)="searchTerm = $event" (submitted)="search()"></app-search-field>
-    <label>{{ 'admin.statusFilter' | t }}
-      <select [(ngModel)]="statusFilter" (ngModelChange)="search()">
-        <option value="">{{ 'catalogue.all' | t }}</option>
-        @for (status of statuses; track status) { <option [value]="status">{{ 'status.' + status | t }}</option> }
+  <div class="toolbar" role="search">
+    <app-search-field
+      [label]="'admin.search' | t"
+      [value]="searchTerm"
+      (valueChange)="searchTerm = $event"
+      (submitted)="applySearch()"></app-search-field>
+
+    <label>{{ 'catalogue.category' | t }}
+      <select name="category" [value]="query().categoryId" (change)="setFilter('categoryId', $any($event.target).value)">
+        <option value="" [selected]="query().categoryId === ''">{{ 'catalogue.all' | t }}</option>
+        @for (category of categories(); track category.id) {
+          <option [value]="category.id" [selected]="query().categoryId === category.id">{{ categoryOption(category) }}</option>
+        }
       </select>
     </label>
+
+    <label>{{ 'catalogue.brand' | t }}
+      <select name="brand" [value]="query().brandId" (change)="setFilter('brandId', $any($event.target).value)">
+        <option value="" [selected]="query().brandId === ''">{{ 'catalogue.all' | t }}</option>
+        @for (brand of brands(); track brand.id) {
+          <option [value]="brand.id" [selected]="query().brandId === brand.id">{{ brand.name }}</option>
+        }
+      </select>
+    </label>
+
+    <label>{{ 'catalogue.availability' | t }}
+      <select name="availability" [value]="query().availability" (change)="setFilter('availability', $any($event.target).value)">
+        <option value="" [selected]="query().availability === ''">{{ 'catalogue.all' | t }}</option>
+        @for (availability of availabilities; track availability) {
+          <option [value]="availability" [selected]="query().availability === availability">{{ 'availability.' + availability | t }}</option>
+        }
+      </select>
+    </label>
+
+    <label>{{ 'admin.status' | t }}
+      <select name="status" [value]="query().status" (change)="setFilter('status', $any($event.target).value)">
+        <option value="" [selected]="query().status === ''">{{ 'catalogue.all' | t }}</option>
+        @for (status of statuses; track status) {
+          <option [value]="status" [selected]="query().status === status">{{ 'status.' + status | t }}</option>
+        }
+      </select>
+    </label>
+
+    <label>{{ 'admin.pageSize' | t }}
+      <select name="pageSize" [value]="query().pageSize" (change)="setPageSize($any($event.target).value)">
+        @for (size of pageSizes; track size) {
+          <option [value]="size" [selected]="query().pageSize === size">{{ size }}</option>
+        }
+      </select>
+    </label>
+
+    <button mat-button type="button" (click)="reset()">{{ 'catalogue.reset' | t }}</button>
   </div>
-
-  @if (formOpen()) {
-    <form class="form" (ngSubmit)="save()">
-      <h2>{{ (editing() ? 'admin.editProduct' : 'admin.newProduct') | t }}</h2>
-      @if (editing()?.verificationStatus === 'Verified') {
-        <p class="warning">{{ 'admin.resetWarning' | t }}</p>
-      }
-      <div class="fields">
-        <label>{{ 'admin.nameEn' | t }}<input name="name" [(ngModel)]="form.name" required></label>
-        <label>{{ 'admin.nameAr' | t }}<input name="nameAr" dir="rtl" [(ngModel)]="form.nameAr"></label>
-        <label>{{ 'admin.descEn' | t }}<textarea name="description" [(ngModel)]="form.description"></textarea></label>
-        <label>{{ 'admin.descAr' | t }}<textarea name="descriptionAr" dir="rtl" [(ngModel)]="form.descriptionAr"></textarea></label>
-        <label>{{ 'admin.brand' | t }}<input name="brand" [(ngModel)]="form.brand" required></label>
-        <label>{{ 'catalogue.category' | t }}
-          <select name="category" [(ngModel)]="form.category">
-            @for (category of categories; track category) { <option [value]="category">{{ 'category.' + category | t }}</option> }
-          </select>
-        </label>
-        <label>{{ 'admin.price' | t }}<input name="price" type="number" min="0" step="0.01" [(ngModel)]="form.price" required></label>
-        <label>{{ 'catalogue.availability' | t }}
-          <select name="availability" [(ngModel)]="form.availability">
-            @for (availability of availabilities; track availability) { <option [value]="availability">{{ 'availability.' + availability | t }}</option> }
-          </select>
-        </label>
-        <label>{{ 'admin.imageUrl' | t }}<input name="imageUrl" type="url" [(ngModel)]="form.imageUrl"></label>
-        <label>{{ 'admin.sourceName' | t }}<input name="sourceName" [(ngModel)]="form.sourceName"></label>
-        <label>{{ 'admin.sourceUrl' | t }}<input name="sourceUrl" type="url" [(ngModel)]="form.sourceUrl"></label>
-        <label class="check"><input name="isActive" type="checkbox" [(ngModel)]="form.isActive"> {{ 'common.active' | t }}</label>
-      </div>
-
-      <h3>{{ 'admin.specs' | t }}</h3>
-      @for (spec of form.specs; track $index) {
-        <div class="spec">
-          <input [name]="'specKey' + $index" [placeholder]="'admin.specKey' | t" [(ngModel)]="spec.key">
-          <input [name]="'specValue' + $index" [placeholder]="'admin.specValue' | t" [(ngModel)]="spec.value">
-          <button mat-button type="button" (click)="removeSpec($index)">{{ 'admin.removeSpec' | t }}</button>
-        </div>
-      }
-      <button mat-button type="button" (click)="addSpec()">{{ 'admin.addSpec' | t }}</button>
-
-      <div class="actions">
-        <button mat-flat-button type="submit" [disabled]="saving()">{{ 'common.save' | t }}</button>
-        <button mat-button type="button" (click)="cancel()">{{ 'common.cancel' | t }}</button>
-      </div>
-    </form>
-  }
 
   @if (loading()) {
     <app-page-state kind="loading" [title]="'catalogue.loading' | t"></app-page-state>
   } @else if (failed()) {
     <app-page-state kind="error" [title]="'admin.loadError' | t" (retry)="load()"></app-page-state>
   } @else if (products().length === 0) {
-    <app-page-state kind="empty" [title]="'catalogue.empty' | t"></app-page-state>
+    <app-page-state kind="empty" [title]="'admin.empty' | t"></app-page-state>
   } @else {
     <div class="scroll">
       <table>
         <thead>
           <tr>
-            <th>{{ 'admin.nameEn' | t }}</th>
-            <th>{{ 'admin.brand' | t }}</th>
-            <th>{{ 'admin.price' | t }}</th>
-            <th>{{ 'admin.statusFilter' | t }}</th>
-            <th></th>
+            <th>{{ 'admin.image' | t }}</th>
+            <th>{{ 'admin.sku' | t }}</th>
+            <th [attr.aria-sort]="ariaSort('name')"><button type="button" class="sort" (click)="sortBy('name')">{{ 'admin.name' | t }} {{ sortIndicator('name') }}</button></th>
+            <th>{{ 'catalogue.category' | t }}</th>
+            <th>{{ 'catalogue.brand' | t }}</th>
+            <th [attr.aria-sort]="ariaSort('price')"><button type="button" class="sort" (click)="sortBy('price')">{{ 'admin.priceShort' | t }} {{ sortIndicator('price') }}</button></th>
+            <th [attr.aria-sort]="ariaSort('stock')"><button type="button" class="sort" (click)="sortBy('stock')">{{ 'admin.stock' | t }} {{ sortIndicator('stock') }}</button></th>
+            <th>{{ 'admin.status' | t }}</th>
+            <th [attr.aria-sort]="ariaSort('updated')"><button type="button" class="sort" (click)="sortBy('updated')">{{ 'admin.updated' | t }} {{ sortIndicator('updated') }}</button></th>
           </tr>
         </thead>
         <tbody>
           @for (product of products(); track product.id) {
-            <tr>
-              <td>{{ translation.localized(product.name, product.nameAr) }}</td>
-              <td>{{ product.brand }}</td>
-              <td>{{ product.price | currency: product.currency : 'symbol' : '1.0-0' }}</td>
-              <td><span class="badge" [class]="'badge status-' + product.verificationStatus">{{ 'status.' + product.verificationStatus | t }}</span></td>
-              <td class="row-actions">
-                <button mat-button type="button" (click)="edit(product)">{{ 'common.edit' | t }}</button>
-                @if (isAdmin) {
-                  @if (product.verificationStatus !== 'Verified') {
-                    <button mat-button type="button" (click)="setStatus(product, 'Verified')">{{ 'admin.verify' | t }}</button>
-                  }
-                  @if (product.verificationStatus !== 'Rejected') {
-                    <button mat-button type="button" (click)="setStatus(product, 'Rejected')">{{ 'admin.reject' | t }}</button>
-                  }
-                  @if (product.verificationStatus !== 'Pending') {
-                    <button mat-button type="button" (click)="setStatus(product, 'Pending')">{{ 'admin.setPending' | t }}</button>
-                  }
-                  <button mat-button type="button" (click)="toggleHistory(product)">{{ 'admin.history' | t }}</button>
-                  <button mat-button type="button" (click)="remove(product)">{{ 'common.delete' | t }}</button>
+            <tr class="row" tabindex="0" (click)="open(product)" (keyup.enter)="open(product)">
+              <td>
+                @if (product.imageUrl) {
+                  <img class="thumb" [src]="product.imageUrl" [alt]="translation.localized(product.name, product.nameAr)">
+                } @else {
+                  <span class="thumb placeholder"></span>
                 }
               </td>
+              <td>{{ product.sku || ('common.noValue' | t) }}</td>
+              <td>{{ translation.localized(product.name, product.nameAr) }}</td>
+              <td>{{ categoryLabel(product) }}</td>
+              <td>{{ product.brandName || ('common.noValue' | t) }}</td>
+              <td>{{ product.price == null ? ('common.noValue' | t) : (product.price | currency: product.currency : 'symbol' : '1.0-2') }}</td>
+              <td>{{ product.stockQuantity }} <span class="availability" [class.out]="product.availability === 'OutOfStock'">({{ 'availability.' + product.availability | t }})</span></td>
+              <td><span class="badge" [class]="'badge status-' + product.status">{{ 'status.' + product.status | t }}</span></td>
+              <td>{{ product.lastUpdatedOn | date: 'short' }}</td>
             </tr>
-            @if (historyFor() === product.id) {
-              <tr class="history">
-                <td colspan="5">
-                  @if (history().length === 0) {
-                    {{ 'admin.historyEmpty' | t }}
-                  } @else {
-                    <ul>
-                      @for (entry of history(); track $index) {
-                        <li>{{ entry.createdOn }}: {{ 'status.' + entry.fromStatus | t }} → {{ 'status.' + entry.toStatus | t }}{{ entry.reason ? ' — ' + entry.reason : '' }}</li>
-                      }
-                    </ul>
-                  }
-                </td>
-              </tr>
-            }
           }
         </tbody>
       </table>
     </div>
+
     <app-pagination-controls
-      [pageNumber]="pageNumber()"
-      [pageSize]="pageSize"
+      [pageNumber]="query().pageNumber"
+      [pageSize]="query().pageSize"
       [totalCount]="totalCount()"
       [totalPages]="totalPages()"
-      (previous)="goTo(pageNumber() - 1)"
-      (next)="goTo(pageNumber() + 1)"></app-pagination-controls>
+      (previous)="goTo(query().pageNumber - 1)"
+      (next)="goTo(query().pageNumber + 1)"></app-pagination-controls>
   }
 </section>

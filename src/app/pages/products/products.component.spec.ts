@@ -3,52 +3,64 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { provideNoopAnimations } from '@angular/platform-browser/animations';
-import { AuthService } from '../../services/auth.service';
-import { ProductsComponent } from './products.component';
+import { Router, provideRouter } from '@angular/router';
+import { DEFAULT_PRODUCT_QUERY } from '../../models/product.model';
+import { ProductsComponent, parseProductQuery, toQueryParams } from './products.component';
 
-async function render(roles: string[]): Promise<HTMLElement> {
-  TestBed.configureTestingModule({
-    imports: [ProductsComponent],
-    providers: [
-      provideHttpClient(),
-      provideHttpClientTesting(),
-      provideNoopAnimations(),
-      { provide: AuthService, useValue: { hasRole: (role: string) => roles.includes(role) } }
-    ]
-  });
-  const httpTesting = TestBed.inject(HttpTestingController);
-  const fixture = TestBed.createComponent(ProductsComponent);
-  fixture.detectChanges();
+const emptyPage = { success: true, statusCode: 200, message: '', data: { items: [], totalCount: 0, pageNumber: 1, pageSize: 20, totalPages: 1 } };
 
-  httpTesting.expectOne((req) => req.url.endsWith('/products')).flush({
-    success: true,
-    statusCode: 200,
-    data: {
-      items: [{
-        id: 'p1', name: 'Phone', nameAr: '', description: '', descriptionAr: '', brand: 'Samsung', category: 'MobilePhone',
-        price: 1000, currency: 'EGP', availability: 'InStock', imageUrl: null, specifications: {}, sourceName: 'S', sourceUrl: null,
-        verificationStatus: 'Pending', verifiedOn: null, isActive: true
-      }],
-      totalCount: 1, pageNumber: 1, pageSize: 10, totalPages: 1, hasNextPage: false, hasPreviousPage: false
-    }
-  });
-  await fixture.whenStable();
-  fixture.detectChanges();
-  return fixture.nativeElement as HTMLElement;
-}
-
-describe('ProductsComponent role-based actions', () => {
-  it('lets a seller edit but not verify or delete', async () => {
-    const text = (await render(['Seller'])).querySelector('td.row-actions')?.textContent ?? '';
-    expect(text).toContain('Edit');
-    expect(text).not.toContain('Verify');
-    expect(text).not.toContain('Delete');
+describe('product list query params', () => {
+  it('round-trips non-default state and omits defaults', () => {
+    const query = { ...DEFAULT_PRODUCT_QUERY, search: 'abc', status: 'Draft' as const, sortBy: 'price' as const, sortDirection: 'asc' as const, pageSize: 50, pageNumber: 3 };
+    const params = toQueryParams(query);
+    expect(params).toEqual({ search: 'abc', status: 'Draft', sortBy: 'price', sortDirection: 'asc', pageSize: 50, page: 3 });
+    expect(parseProductQuery(new URLSearchParams(Object.entries(params).map(([k, v]) => [k, String(v)])))).toEqual(query);
+    expect(toQueryParams(DEFAULT_PRODUCT_QUERY)).toEqual({});
   });
 
-  it('lets an admin verify and delete', async () => {
-    const text = (await render(['Admin'])).querySelector('td.row-actions')?.textContent ?? '';
-    expect(text).toContain('Verify');
-    expect(text).toContain('Delete');
+  it('falls back to defaults for invalid values', () => {
+    const parsed = parseProductQuery(new URLSearchParams('pageSize=7&page=-1&status=Nope&sortBy=x'));
+    expect(parsed).toEqual(DEFAULT_PRODUCT_QUERY);
+  });
+});
+
+describe('ProductsComponent', () => {
+  let httpTesting: HttpTestingController;
+  let router: Router;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      imports: [ProductsComponent],
+      providers: [provideRouter([{ path: 'products', component: ProductsComponent }]), provideHttpClient(), provideHttpClientTesting()]
+    });
+    httpTesting = TestBed.inject(HttpTestingController);
+    router = TestBed.inject(Router);
+  });
+
+  it('loads using the query params from the URL and syncs filter changes back to the URL', async () => {
+    await router.navigateByUrl('/products?status=Draft&page=2&pageSize=50');
+    const fixture = TestBed.createComponent(ProductsComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const list = httpTesting.expectOne((req) => req.url === 'http://localhost:5186/api/products');
+    expect(list.request.params.get('status')).toBe('Draft');
+    expect(list.request.params.get('pageNumber')).toBe('2');
+    expect(list.request.params.get('pageSize')).toBe('50');
+    list.flush(emptyPage);
+    httpTesting.match((req) => req.url.endsWith('/categories') || req.url.endsWith('/brands')).forEach((req) => req.flush({ success: true, data: [] }));
+
+    (fixture.componentInstance as unknown as { setFilter(key: string, value: string): void }).setFilter('availability', 'OutOfStock');
+    await fixture.whenStable();
+
+    expect(router.url).toContain('availability=OutOfStock');
+    expect(router.url).toContain('status=Draft');
+    expect(router.url).toContain('pageSize=50');
+    expect(router.url).not.toContain('page=2');
+
+    const reload = httpTesting.expectOne((req) => req.url === 'http://localhost:5186/api/products');
+    expect(reload.request.params.get('availability')).toBe('OutOfStock');
+    expect(reload.request.params.get('pageNumber')).toBe('1');
+    reload.flush(emptyPage);
   });
 });

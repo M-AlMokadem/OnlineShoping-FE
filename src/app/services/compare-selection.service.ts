@@ -1,33 +1,35 @@
 import { Injectable, computed, signal } from '@angular/core';
-import { ProductCategory, ProductDto } from '../models/product.model';
+import { ProductDto } from '../models/product.model';
+
+type CompareItem = Pick<ProductDto, 'id' | 'categoryId'>;
 
 export const MAX_COMPARE_ITEMS = 4;
 export type AddResult = 'added' | 'limit' | 'category';
 
 @Injectable({ providedIn: 'root' })
 export class CompareSelectionService {
-  private readonly items = signal<Pick<ProductDto, 'id' | 'category'>[]>([]);
+  private readonly items = signal<CompareItem[]>([]);
 
   readonly ids = computed(() => this.items().map((item) => item.id));
   readonly count = computed(() => this.items().length);
-  readonly category = computed<ProductCategory | null>(() => this.items()[0]?.category ?? null);
+  readonly category = computed<string | null>(() => this.items()[0]?.categoryId ?? null);
 
   has(id: string): boolean {
     return this.items().some((item) => item.id === id);
   }
 
-  add(product: Pick<ProductDto, 'id' | 'category'>): AddResult {
+  add(product: CompareItem): AddResult {
     if (this.has(product.id)) {
       return 'added';
     }
     if (this.items().length >= MAX_COMPARE_ITEMS) {
       return 'limit';
     }
-    if (this.category() && this.category() !== product.category) {
+    if (this.category() && this.category() !== product.categoryId) {
       return 'category';
     }
 
-    this.items.update((current) => [...current, { id: product.id, category: product.category }]);
+    this.items.update((current) => [...current, { id: product.id, categoryId: product.categoryId }]);
     return 'added';
   }
 
@@ -35,7 +37,7 @@ export class CompareSelectionService {
     this.items.update((current) => current.filter((item) => item.id !== id));
   }
 
-  toggle(product: Pick<ProductDto, 'id' | 'category'>): AddResult {
+  toggle(product: CompareItem): AddResult {
     if (this.has(product.id)) {
       this.remove(product.id);
       return 'added';

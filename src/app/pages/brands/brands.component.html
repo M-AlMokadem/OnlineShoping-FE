@@ -1,0 +1,78 @@
+<section class="page">
+  <header>
+    <h1>{{ 'brands.title' | t }}</h1>
+    <button mat-flat-button type="button" (click)="openNew()">{{ 'brand.new' | t }}</button>
+  </header>
+
+  @if (formOpen()) {
+    <form class="form" [formGroup]="form" (ngSubmit)="save()">
+      <h2>{{ (editing() ? 'brand.edit' : 'brand.new') | t }}</h2>
+      @if (otherErrors().length > 0) {
+        <ul class="notice error">
+          @for (message of otherErrors(); track message) { <li>{{ message }}</li> }
+        </ul>
+      }
+      <div class="fields">
+        <mat-form-field appearance="outline">
+          <mat-label>{{ 'admin.name' | t }}</mat-label>
+          <input matInput formControlName="name">
+          <mat-error>{{ errorText('name') }}</mat-error>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>{{ 'common.description' | t }}</mat-label>
+          <input matInput formControlName="description">
+          <mat-error>{{ errorText('description') }}</mat-error>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>{{ 'brand.logoUrl' | t }}</mat-label>
+          <input matInput formControlName="logoUrl">
+          <mat-error>{{ errorText('logoUrl') }}</mat-error>
+        </mat-form-field>
+      </div>
+      <mat-checkbox formControlName="isActive">{{ 'common.active' | t }}</mat-checkbox>
+      <div class="actions">
+        <button mat-flat-button color="primary" type="submit" [disabled]="saving()">{{ 'common.save' | t }}</button>
+        <button mat-button type="button" (click)="cancel()">{{ 'common.cancel' | t }}</button>
+      </div>
+    </form>
+  }
+
+  @if (loading()) {
+    <app-page-state kind="loading" [title]="'catalogue.loading' | t"></app-page-state>
+  } @else if (failed()) {
+    <app-page-state kind="error" [title]="'brands.loadError' | t" (retry)="load()"></app-page-state>
+  } @else if (brands().length === 0) {
+    <app-page-state kind="empty" [title]="'brands.empty' | t"></app-page-state>
+  } @else {
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>{{ 'admin.name' | t }}</th>
+            <th>{{ 'common.description' | t }}</th>
+            <th>{{ 'common.productCount' | t }}</th>
+            <th>{{ 'admin.status' | t }}</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (brand of brands(); track brand.id) {
+            <tr>
+              <td>{{ brand.name }}</td>
+              <td>{{ brand.description || ('common.noValue' | t) }}</td>
+              <td>{{ brand.productCount }}</td>
+              <td><span class="badge" [class.off]="!brand.isActive">{{ (brand.isActive ? 'common.active' : 'common.inactive') | t }}</span></td>
+              <td class="row-actions">
+                <button mat-button type="button" (click)="edit(brand)">{{ 'common.edit' | t }}</button>
+                <button mat-button type="button" (click)="setActive(brand, !brand.isActive)">
+                  {{ (brand.isActive ? 'common.deactivate' : 'common.activate') | t }}
+                </button>
+                <button mat-button type="button" (click)="remove(brand)">{{ 'common.delete' | t }}</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

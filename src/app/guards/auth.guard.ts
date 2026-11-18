@@ -8,21 +8,22 @@ export const authGuard: CanActivateFn = (route, state) => {
   const router = inject(Router);
   const toastService = inject(ToastService);
 
+  if (!authService.isAuthenticated()) {
+    toastService.showError('Please sign in to access this page.');
+    return router.createUrlTree(['/login'], {
+      queryParams: { returnUrl: state.url }
+    });
+  }
 
   const requiredRoles = route.data?.['roles'] as string[] | undefined;
-  if (requiredRoles && requiredRoles.length > 0) {
-    const hasRequiredRole = requiredRoles.some((role) => authService.hasRole(role));
-    if (!hasRequiredRole) {
-      toastService.showError('You do not have permission to access this page.');
-      return router.createUrlTree(['/']);
-    }
-  }
-  if (authService.isAuthenticated()) {
-    return true;
+  const requiredPermissions = route.data?.['permissions'] as string[] | undefined;
+  const rolesOk = !requiredRoles?.length || requiredRoles.some((role) => authService.hasRole(role));
+  const permissionsOk = !requiredPermissions?.length || authService.hasAnyPermission(requiredPermissions);
+
+  if (!rolesOk || !permissionsOk) {
+    toastService.showError('You do not have permission to access this page.');
+    return router.createUrlTree(['/']);
   }
 
-  toastService.showError('Please sign in to access this page.');
-  return router.createUrlTree(['/login'], {
-    queryParams: { returnUrl: state.url }
-  });
+  return true;
 };

@@ -9,7 +9,8 @@ import { PageStateComponent } from '../../components/page-state/page-state.compo
 import { SearchFieldComponent } from '../../components/search-field/search-field.component';
 import { TranslatePipe } from '../../i18n/translate.pipe';
 import { TranslationService } from '../../i18n/translation.service';
-import { CatalogueFilters, PRODUCT_AVAILABILITIES, PRODUCT_CATEGORIES, ProductDto } from '../../models/product.model';
+import { BrandDto, CategoryDto } from '../../models/category-brand.model';
+import { CatalogueFilters, PRODUCT_AVAILABILITIES, ProductDto } from '../../models/product.model';
 import { CatalogueApiService } from '../../services/catalogue-api.service';
 import { CompareSelectionService } from '../../services/compare-selection.service';
 import { ToastService } from '../../services/toast.service';
@@ -27,12 +28,12 @@ export class CatalogueComponent implements OnInit {
 
   protected readonly translation = inject(TranslationService);
   protected readonly compare = inject(CompareSelectionService);
-  protected readonly categories = PRODUCT_CATEGORIES;
   protected readonly availabilities = PRODUCT_AVAILABILITIES;
   protected readonly pageSize = 12;
 
   protected readonly products = signal<ProductDto[]>([]);
-  protected readonly brands = signal<string[]>([]);
+  protected readonly categories = signal<CategoryDto[]>([]);
+  protected readonly brands = signal<BrandDto[]>([]);
   protected readonly totalCount = signal(0);
   protected readonly totalPages = signal(1);
   protected readonly pageNumber = signal(1);
@@ -42,7 +43,7 @@ export class CatalogueComponent implements OnInit {
   protected filters: CatalogueFilters = this.emptyFilters();
 
   ngOnInit(): void {
-    void this.loadBrands();
+    void this.loadFilterOptions();
     void this.load();
   }
 
@@ -92,16 +93,25 @@ export class CatalogueComponent implements OnInit {
     }
   }
 
-  private async loadBrands(): Promise<void> {
+  protected categoryName(category: CategoryDto): string {
+    return this.translation.localized(category.name, category.nameAr);
+  }
+
+  private async loadFilterOptions(): Promise<void> {
     try {
-      const response = await firstValueFrom(this.api.getBrands());
-      this.brands.set(response.data ?? []);
+      const [categories, brands] = await Promise.all([
+        firstValueFrom(this.api.getCategories()),
+        firstValueFrom(this.api.getBrands())
+      ]);
+      this.categories.set(categories.data ?? []);
+      this.brands.set(brands.data ?? []);
     } catch {
+      this.categories.set([]);
       this.brands.set([]);
     }
   }
 
   private emptyFilters(): CatalogueFilters {
-    return { searchedValue: '', brand: '', category: '', availability: '', minPrice: null, maxPrice: null };
+    return { searchedValue: '', brandId: '', categoryId: '', availability: '', minPrice: null, maxPrice: null };
   }
 }

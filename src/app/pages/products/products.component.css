@@ -1,22 +1,21 @@
 :host { display: block; }
 .admin { display: grid; gap: 1rem; padding: 1rem 0 2rem; }
 header { display: flex; justify-content: space-between; align-items: center; }
-h1, h2, h3 { margin: 0; }
+h1 { margin: 0; }
 .toolbar { display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end; }
 label { display: grid; gap: 0.25rem; font-size: 0.85rem; color: #4f5f85; }
-input, select, textarea { padding: 0.5rem; border: 1px solid #c3cbe0; border-radius: 8px; font: inherit; }
-.form { display: grid; gap: 0.8rem; padding: 1.2rem; border: 1px solid #e0e5f2; border-radius: 16px; background: #fff; }
-.fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0.8rem; }
-.check { display: flex; align-items: center; gap: 0.4rem; }
-.warning { margin: 0; padding: 0.6rem 0.8rem; border-radius: 8px; background: #fff7e0; }
-.spec { display: flex; gap: 0.5rem; }
-.spec input { flex: 1; }
-.actions { display: flex; gap: 0.6rem; }
+select { padding: 0.5rem; border: 1px solid #c3cbe0; border-radius: 8px; font: inherit; }
 .scroll { overflow-x: auto; }
 table { border-collapse: collapse; width: 100%; }
 th, td { padding: 0.6rem 0.8rem; border-bottom: 1px solid #e0e5f2; text-align: start; }
-.row-actions { white-space: nowrap; }
+.sort { border: 0; background: none; font: inherit; font-weight: 700; cursor: pointer; padding: 0; }
+.row { cursor: pointer; }
+.row:hover, .row:focus { background: #f6f8ff; outline: none; }
+.thumb { width: 44px; height: 44px; object-fit: contain; border-radius: 6px; background: #f6f8ff; display: block; }
+.availability { color: #106c4f; font-size: 0.8rem; }
+.availability.out { color: #9f2c21; }
 .badge { padding: 0.15rem 0.6rem; border-radius: 999px; font-size: 0.8rem; background: #eef2ff; }
-.status-Verified { background: #d9f4e8; color: #106c4f; }
-.status-Rejected { background: #fde2df; color: #9f2c21; }
-.history ul { margin: 0; padding-inline-start: 1.2rem; }
+.status-Published { background: #d9f4e8; color: #106c4f; }
+.status-Draft { background: #fff7e0; color: #7a5b00; }
+.status-Inactive { background: #e6e8ef; color: #4f5f85; }
+.status-Archived { background: #fde2df; color: #9f2c21; }
