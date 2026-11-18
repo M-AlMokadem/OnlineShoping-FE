@@ -4,7 +4,7 @@
     <p>{{ 'home.subtitle' | t }}</p>
   </header>
 
-  <form class="filters" (ngSubmit)="search()">
+  <div class="filters" role="search">
     <app-search-field
       [label]="'catalogue.search' | t"
       [value]="filters.searchedValue ?? ''"
@@ -33,15 +33,15 @@
     </label>
 
     <label>{{ 'catalogue.minPrice' | t }}
-      <input type="number" min="0" name="minPrice" [(ngModel)]="filters.minPrice" (change)="search()">
+      <input type="number" min="0" name="minPrice" [(ngModel)]="filters.minPrice" (change)="search()" (keyup.enter)="search()">
     </label>
 
     <label>{{ 'catalogue.maxPrice' | t }}
-      <input type="number" min="0" name="maxPrice" [(ngModel)]="filters.maxPrice" (change)="search()">
+      <input type="number" min="0" name="maxPrice" [(ngModel)]="filters.maxPrice" (change)="search()" (keyup.enter)="search()">
     </label>
 
     <button mat-button type="button" (click)="reset()">{{ 'catalogue.reset' | t }}</button>
-  </form>
+  </div>
 
   @if (compare.count() > 0) {
     <div class="compare-bar">
