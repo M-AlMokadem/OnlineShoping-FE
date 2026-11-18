@@ -42,7 +42,7 @@ export class UsersComponent {
   protected readonly totalPages = signal(1);
   protected readonly searchTerm = signal('');
   protected readonly isCreating = signal(false);
-  protected readonly newUser = signal<UserFormValue>({ fullName: '', email: '', password: '' });
+  protected readonly newUser = signal<UserFormValue>({ fullName: '', email: '', password: '', role: 'User' });
   protected readonly loadError = signal(false);
 
   constructor() {
@@ -60,10 +60,11 @@ export class UsersComponent {
       await firstValueFrom(this.usersApi.create({
         fullName: request.fullName.trim(),
         email: request.email.trim(),
-        password: request.password
+        password: request.password,
+        role: request.role
       }));
       this.toastService.showSuccess('User created successfully.');
-      this.newUser.set({ fullName: '', email: '', password: '' });
+      this.newUser.set({ fullName: '', email: '', password: '', role: 'User' });
       this.pageNumber.set(1);
       await this.loadUsers();
     } catch {

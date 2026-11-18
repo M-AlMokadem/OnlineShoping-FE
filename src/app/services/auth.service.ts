@@ -55,6 +55,14 @@ export class AuthService {
 		this.persistSession(response);
 	}
 
+	async forgotPassword(email: string): Promise<void> {
+		await firstValueFrom(this.httpClient.post(`${this.authApiUrl}/forgot-password`, { email }));
+	}
+
+	async resetPassword(email: string, token: string, newPassword: string): Promise<void> {
+		await firstValueFrom(this.httpClient.post(`${this.authApiUrl}/reset-password`, { email, token, newPassword }));
+	}
+
 	async register(payload: RegisterPayload): Promise<void> {
 		const response = await firstValueFrom(this.httpClient.post<AuthSession>(`${this.authApiUrl}/register`, payload));
 		this.persistSession(response);

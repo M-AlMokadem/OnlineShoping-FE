@@ -4,13 +4,14 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import { PasswordFieldComponent } from '../password-field/password-field.component';
 import { UserFormValue } from '../../models/user-form.model';
 
 @Component({
   selector: 'app-user-form',
   standalone: true,
-  imports: [FormsModule, MatButtonModule, MatCardModule, MatFormFieldModule, MatInputModule, PasswordFieldComponent],
+  imports: [FormsModule, MatButtonModule, MatCardModule, MatFormFieldModule, MatInputModule, MatSelectModule, PasswordFieldComponent],
   template: `
     <form class="user-form" (ngSubmit)="submit()">
       <div class="form-heading">
@@ -33,6 +34,13 @@ import { UserFormValue } from '../../models/user-form.model';
         [minlength]="8"
         [(ngModel)]="value.password"
       ></app-password-field>
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Role</mat-label>
+        <mat-select name="role" [(ngModel)]="value.role">
+          <mat-option value="User">User</mat-option>
+          <mat-option value="Seller">Seller</mat-option>
+        </mat-select>
+      </mat-form-field>
       <button mat-flat-button color="primary" type="submit" [disabled]="isSubmitting">
         {{ isSubmitting ? 'Saving...' : submitLabel }}
       </button>
@@ -40,7 +48,7 @@ import { UserFormValue } from '../../models/user-form.model';
   `,
   styles: [`
     :host { display: block; }
-    .user-form { display: grid; grid-template-columns: minmax(150px, 0.8fr) repeat(3, minmax(160px, 1fr)) auto; gap: 0.75rem; align-items: center; margin: 1.4rem; padding: 1rem; border: 1px solid rgba(22, 33, 62, 0.1); border-radius: 16px; background: rgba(247, 249, 255, 0.9); }
+    .user-form { display: grid; grid-template-columns: minmax(150px, 0.8fr) repeat(4, minmax(140px, 1fr)) auto; gap: 0.75rem; align-items: center; margin: 1.4rem; padding: 1rem; border: 1px solid rgba(22, 33, 62, 0.1); border-radius: 16px; background: rgba(247, 249, 255, 0.9); }
     .form-heading h2 { margin: 0.25rem 0 0; color: #16213e; font-size: 1.05rem; }
     @media (max-width: 900px) { .user-form { grid-template-columns: 1fr 1fr; } .form-heading, .user-form button { grid-column: 1 / -1; } }
     @media (max-width: 560px) { .user-form { grid-template-columns: 1fr; } }
@@ -51,7 +59,7 @@ export class UserFormComponent {
   @Input() title = 'Create user';
   @Input() submitLabel = 'Create user';
   @Input() isSubmitting = false;
-  @Input() value: UserFormValue = { fullName: '', email: '', password: '' };
+  @Input() value: UserFormValue = { fullName: '', email: '', password: '', role: 'User' };
   @Output() saved = new EventEmitter<UserFormValue>();
 
   submit(): void {

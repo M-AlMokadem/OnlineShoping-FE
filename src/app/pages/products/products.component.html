@@ -1,49 +1,132 @@
-<section class="products-page">
+<section class="admin">
   <header>
-    <div>
-      <p class="eyebrow">Starter reference feature</p>
-      <h1>Products</h1>
-    </div>
-    <div class="search-row">
-      <input [(ngModel)]="searchTerm" placeholder="Search products" (keyup.enter)="search()" />
-      <button type="button" (click)="search()">Search</button>
-    </div>
+    <h1>{{ 'admin.title' | t }}</h1>
+    <button mat-flat-button type="button" (click)="openNew()">{{ 'admin.newProduct' | t }}</button>
   </header>
 
-  <form class="product-form" (ngSubmit)="save()">
-    <input name="name" [(ngModel)]="formValue.name" placeholder="Product name" required />
-    <input name="description" [(ngModel)]="formValue.description" placeholder="Description" />
-    <input name="price" type="number" min="0" step="0.01" [(ngModel)]="formValue.price" required />
-    @if (editingId()) {
-      <label><input name="isActive" type="checkbox" [(ngModel)]="formValue.isActive" /> Active</label>
-    }
-    <button type="submit" [disabled]="isSaving()">{{ editingId() ? 'Save changes' : 'Add product' }}</button>
-    @if (editingId()) { <button type="button" (click)="resetForm()">Cancel</button> }
-  </form>
+  <div class="toolbar">
+    <app-search-field [label]="'common.search' | t" [value]="searchTerm" (valueChange)="searchTerm = $event" (submitted)="search()"></app-search-field>
+    <label>{{ 'admin.statusFilter' | t }}
+      <select [(ngModel)]="statusFilter" (ngModelChange)="search()">
+        <option value="">{{ 'catalogue.all' | t }}</option>
+        @for (status of statuses; track status) { <option [value]="status">{{ 'status.' + status | t }}</option> }
+      </select>
+    </label>
+  </div>
 
-  @if (isLoading()) {
-    <p class="state">Loading products...</p>
-  } @else if (loadError()) {
-    <p class="state">Products could not be loaded. Check the API connection.</p>
+  @if (formOpen()) {
+    <form class="form" (ngSubmit)="save()">
+      <h2>{{ (editing() ? 'admin.editProduct' : 'admin.newProduct') | t }}</h2>
+      @if (editing()?.verificationStatus === 'Verified') {
+        <p class="warning">{{ 'admin.resetWarning' | t }}</p>
+      }
+      <div class="fields">
+        <label>{{ 'admin.nameEn' | t }}<input name="name" [(ngModel)]="form.name" required></label>
+        <label>{{ 'admin.nameAr' | t }}<input name="nameAr" dir="rtl" [(ngModel)]="form.nameAr"></label>
+        <label>{{ 'admin.descEn' | t }}<textarea name="description" [(ngModel)]="form.description"></textarea></label>
+        <label>{{ 'admin.descAr' | t }}<textarea name="descriptionAr" dir="rtl" [(ngModel)]="form.descriptionAr"></textarea></label>
+        <label>{{ 'admin.brand' | t }}<input name="brand" [(ngModel)]="form.brand" required></label>
+        <label>{{ 'catalogue.category' | t }}
+          <select name="category" [(ngModel)]="form.category">
+            @for (category of categories; track category) { <option [value]="category">{{ 'category.' + category | t }}</option> }
+          </select>
+        </label>
+        <label>{{ 'admin.price' | t }}<input name="price" type="number" min="0" step="0.01" [(ngModel)]="form.price" required></label>
+        <label>{{ 'catalogue.availability' | t }}
+          <select name="availability" [(ngModel)]="form.availability">
+            @for (availability of availabilities; track availability) { <option [value]="availability">{{ 'availability.' + availability | t }}</option> }
+          </select>
+        </label>
+        <label>{{ 'admin.imageUrl' | t }}<input name="imageUrl" type="url" [(ngModel)]="form.imageUrl"></label>
+        <label>{{ 'admin.sourceName' | t }}<input name="sourceName" [(ngModel)]="form.sourceName"></label>
+        <label>{{ 'admin.sourceUrl' | t }}<input name="sourceUrl" type="url" [(ngModel)]="form.sourceUrl"></label>
+        <label class="check"><input name="isActive" type="checkbox" [(ngModel)]="form.isActive"> {{ 'common.active' | t }}</label>
+      </div>
+
+      <h3>{{ 'admin.specs' | t }}</h3>
+      @for (spec of form.specs; track $index) {
+        <div class="spec">
+          <input [name]="'specKey' + $index" [placeholder]="'admin.specKey' | t" [(ngModel)]="spec.key">
+          <input [name]="'specValue' + $index" [placeholder]="'admin.specValue' | t" [(ngModel)]="spec.value">
+          <button mat-button type="button" (click)="removeSpec($index)">{{ 'admin.removeSpec' | t }}</button>
+        </div>
+      }
+      <button mat-button type="button" (click)="addSpec()">{{ 'admin.addSpec' | t }}</button>
+
+      <div class="actions">
+        <button mat-flat-button type="submit" [disabled]="saving()">{{ 'common.save' | t }}</button>
+        <button mat-button type="button" (click)="cancel()">{{ 'common.cancel' | t }}</button>
+      </div>
+    </form>
+  }
+
+  @if (loading()) {
+    <app-page-state kind="loading" [title]="'catalogue.loading' | t"></app-page-state>
+  } @else if (failed()) {
+    <app-page-state kind="error" [title]="'admin.loadError' | t" (retry)="load()"></app-page-state>
   } @else if (products().length === 0) {
-    <p class="state">No products found.</p>
+    <app-page-state kind="empty" [title]="'catalogue.empty' | t"></app-page-state>
   } @else {
-    <div class="table-wrap">
+    <div class="scroll">
       <table>
-        <thead><tr><th>Name</th><th>Description</th><th>Price</th><th>Status</th><th></th></tr></thead>
+        <thead>
+          <tr>
+            <th>{{ 'admin.nameEn' | t }}</th>
+            <th>{{ 'admin.brand' | t }}</th>
+            <th>{{ 'admin.price' | t }}</th>
+            <th>{{ 'admin.statusFilter' | t }}</th>
+            <th></th>
+          </tr>
+        </thead>
         <tbody>
           @for (product of products(); track product.id) {
             <tr>
-              <td>{{ product.name }}</td>
-              <td>{{ product.description || '-' }}</td>
-              <td>{{ product.price | currency }}</td>
-              <td>{{ product.isActive ? 'Active' : 'Inactive' }}</td>
-              <td><button type="button" (click)="edit(product)">Edit</button><button type="button" (click)="remove(product)">Delete</button></td>
+              <td>{{ translation.localized(product.name, product.nameAr) }}</td>
+              <td>{{ product.brand }}</td>
+              <td>{{ product.price | currency: product.currency : 'symbol' : '1.0-0' }}</td>
+              <td><span class="badge" [class]="'badge status-' + product.verificationStatus">{{ 'status.' + product.verificationStatus | t }}</span></td>
+              <td class="row-actions">
+                <button mat-button type="button" (click)="edit(product)">{{ 'common.edit' | t }}</button>
+                @if (isAdmin) {
+                  @if (product.verificationStatus !== 'Verified') {
+                    <button mat-button type="button" (click)="setStatus(product, 'Verified')">{{ 'admin.verify' | t }}</button>
+                  }
+                  @if (product.verificationStatus !== 'Rejected') {
+                    <button mat-button type="button" (click)="setStatus(product, 'Rejected')">{{ 'admin.reject' | t }}</button>
+                  }
+                  @if (product.verificationStatus !== 'Pending') {
+                    <button mat-button type="button" (click)="setStatus(product, 'Pending')">{{ 'admin.setPending' | t }}</button>
+                  }
+                  <button mat-button type="button" (click)="toggleHistory(product)">{{ 'admin.history' | t }}</button>
+                  <button mat-button type="button" (click)="remove(product)">{{ 'common.delete' | t }}</button>
+                }
+              </td>
             </tr>
+            @if (historyFor() === product.id) {
+              <tr class="history">
+                <td colspan="5">
+                  @if (history().length === 0) {
+                    {{ 'admin.historyEmpty' | t }}
+                  } @else {
+                    <ul>
+                      @for (entry of history(); track $index) {
+                        <li>{{ entry.createdOn }}: {{ 'status.' + entry.fromStatus | t }} → {{ 'status.' + entry.toStatus | t }}{{ entry.reason ? ' — ' + entry.reason : '' }}</li>
+                      }
+                    </ul>
+                  }
+                </td>
+              </tr>
+            }
           }
         </tbody>
       </table>
     </div>
-    <nav class="pagination"><button type="button" (click)="previousPage()" [disabled]="pageNumber() === 1">Previous</button><span>Page {{ pageNumber() }} of {{ totalPages() }}</span><button type="button" (click)="nextPage()" [disabled]="pageNumber() === totalPages()">Next</button></nav>
+    <app-pagination-controls
+      [pageNumber]="pageNumber()"
+      [pageSize]="pageSize"
+      [totalCount]="totalCount()"
+      [totalPages]="totalPages()"
+      (previous)="goTo(pageNumber() - 1)"
+      (next)="goTo(pageNumber() + 1)"></app-pagination-controls>
   }
 </section>

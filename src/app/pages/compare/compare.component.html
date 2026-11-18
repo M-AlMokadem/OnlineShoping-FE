@@ -1,0 +1,38 @@
+<section class="compare">
+  <h1>{{ 'compare.title' | t }}</h1>
+
+  @if (loading()) {
+    <app-page-state kind="loading" [title]="'catalogue.loading' | t"></app-page-state>
+  } @else if (failed()) {
+    <app-page-state kind="error" [title]="'compare.error' | t" (retry)="load()"></app-page-state>
+  } @else if (products().length < 2) {
+    <app-page-state kind="empty" [title]="'compare.hint' | t"></app-page-state>
+    <a mat-flat-button routerLink="/">{{ 'nav.catalogue' | t }}</a>
+  } @else {
+    <p class="hint">{{ 'compare.differences' | t }}</p>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>{{ 'compare.feature' | t }}</th>
+            @for (product of products(); track product.id) {
+              <th>
+                <a [routerLink]="['/catalogue', product.id]">{{ translation.localized(product.name, product.nameAr) }}</a>
+                <button mat-button type="button" (click)="remove(product.id)">{{ 'common.delete' | t }}</button>
+              </th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of rows(); track row.label) {
+            <tr [class.differs]="row.differs">
+              <th scope="row">{{ row.label }}</th>
+              @for (value of row.values; track $index) { <td>{{ value }}</td> }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <button mat-button type="button" (click)="clear()">{{ 'compare.clear' | t }}</button>
+  }
+</section>

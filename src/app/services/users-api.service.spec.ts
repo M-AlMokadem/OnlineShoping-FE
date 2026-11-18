@@ -24,6 +24,15 @@ describe('UsersApiService', () => {
 
   afterEach(() => httpTesting.verify());
 
+  it('sends the selected role when creating a user', () => {
+    service.create({ fullName: 'Sam Seller', email: 'sam@example.com', password: 'Passw0rd!', role: 'Seller' }).subscribe();
+
+    const request = httpTesting.expectOne('http://localhost:5186/api/users');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body.role).toBe('Seller');
+    request.flush({ success: true, statusCode: 200, message: 'ok', data: { id: 'u', fullName: 'Sam Seller', email: 'sam@example.com', isActive: true } });
+  });
+
   it('normalizes a user response from the API wrapper', () => {
     service.getById('user-id').subscribe((result) => {
       expect(result.success).toBeTrue();

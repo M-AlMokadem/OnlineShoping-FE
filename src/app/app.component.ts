@@ -21,4 +21,5 @@ export class AppComponent {
   protected readonly translation = inject(TranslationService);
   protected readonly compare = inject(CompareSelectionService);
   protected readonly isAdmin = computed(() => this.authService.hasRole('Admin'));
+  protected readonly isSeller = computed(() => this.authService.hasRole('Seller'));
 }

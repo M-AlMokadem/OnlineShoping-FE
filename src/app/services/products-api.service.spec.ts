@@ -3,7 +3,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { ProductsApiService } from './products-api.service';
+import { ProductRequest, ProductsApiService } from './products-api.service';
 
 describe('ProductsApiService', () => {
   let service: ProductsApiService;
@@ -34,8 +34,8 @@ describe('ProductsApiService', () => {
     const request = httpTesting.expectOne((request) => request.url === 'http://localhost:5186/api/products');
     expect(request.request.method).toBe('GET');
     expect(request.request.params.get('SearchedValue')).toBe('notebook');
-    expect(request.request.params.get('PageNumber')).toBe('1');
-    expect(request.request.params.get('PageSize')).toBe('10');
+    expect(request.request.params.get('pageNumber')).toBe('1');
+    expect(request.request.params.get('pageSize')).toBe('10');
     request.flush({
       success: true,
       statusCode: 200,
@@ -59,15 +59,26 @@ describe('ProductsApiService', () => {
   });
 
   it('sends a product create request to the products endpoint', () => {
-    service.create({ name: 'New Product', description: 'Description', price: 12.5 }).subscribe();
+    const payload: ProductRequest = {
+      name: 'New Product',
+      nameAr: 'منتج جديد',
+      description: 'Description',
+      descriptionAr: '',
+      brand: 'Samsung',
+      category: 'MobilePhone',
+      price: 12.5,
+      availability: 'InStock',
+      imageUrl: null,
+      specifications: { Storage: '128 GB' },
+      sourceName: 'Retailer',
+      sourceUrl: null,
+      isActive: true
+    };
+    service.create(payload).subscribe();
 
     const request = httpTesting.expectOne('http://localhost:5186/api/products');
     expect(request.request.method).toBe('POST');
-    expect(request.request.body).toEqual({
-      name: 'New Product',
-      description: 'Description',
-      price: 12.5
-    });
+    expect(request.request.body).toEqual(payload);
     request.flush({
       success: true,
       statusCode: 201,

@@ -1,0 +1,49 @@
+<section class="details">
+  <a mat-button routerLink="/">&larr; {{ 'common.back' | t }}</a>
+
+  @if (loading()) {
+    <app-page-state kind="loading" [title]="'catalogue.loading' | t"></app-page-state>
+  } @else if (notFound() || !product()) {
+    <app-page-state kind="empty" [title]="'details.notFound' | t"></app-page-state>
+  } @else {
+    @let p = product()!;
+    <div class="layout">
+      @if (p.imageUrl) {
+        <img class="image" [src]="p.imageUrl" [alt]="translation.localized(p.name, p.nameAr)">
+      }
+      <div class="summary">
+        <p class="eyebrow">{{ p.brand }} · {{ 'category.' + p.category | t }}</p>
+        <h1>{{ translation.localized(p.name, p.nameAr) }}</h1>
+        <p class="price">{{ p.price | currency: p.currency : 'symbol' : '1.0-0' }}</p>
+        <p class="availability" [class.out]="p.availability === 'OutOfStock'">{{ 'availability.' + p.availability | t }}</p>
+        <p>{{ translation.localized(p.description, p.descriptionAr) }}</p>
+        <button mat-flat-button type="button" (click)="toggleCompare(p)">
+          {{ (compare.has(p.id) ? 'details.removeFromCompare' : 'details.addToCompare') | t }}
+        </button>
+      </div>
+    </div>
+
+    <section class="block">
+      <h2>{{ 'details.specs' | t }}</h2>
+      <dl>
+        @for (spec of p.specifications | keyvalue; track spec.key) {
+          <dt>{{ spec.key }}</dt>
+          <dd>{{ spec.value }}</dd>
+        }
+      </dl>
+    </section>
+
+    <section class="block">
+      <h2>{{ 'details.source' | t }}</h2>
+      <dl>
+        <dt>{{ 'details.sourceName' | t }}</dt>
+        <dd>{{ p.sourceName || ('common.noValue' | t) }}</dd>
+        <dt>{{ 'details.verifiedOn' | t }}</dt>
+        <dd>{{ p.verifiedOn ? (p.verifiedOn | date: 'mediumDate') : ('common.noValue' | t) }}</dd>
+      </dl>
+      @if (p.sourceUrl) {
+        <a mat-stroked-button [href]="p.sourceUrl" target="_blank" rel="noopener noreferrer">{{ 'details.goToRetailer' | t }}</a>
+      }
+    </section>
+  }
+</section>

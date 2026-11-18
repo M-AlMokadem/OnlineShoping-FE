@@ -1,15 +1,19 @@
 <div class="app-shell">
   <mat-toolbar class="topbar" color="primary">
-    <a class="brand" routerLink="/">{{ title }}</a>
+    <a class="brand" routerLink="/">{{ 'app.name' | t }}</a>
     <span class="topbar-spacer"></span>
     <nav class="topbar-nav" aria-label="Primary">
-      <a mat-button routerLink="/" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">Overview</a>
-      @if (canManageUsers()) {
-        <a mat-button routerLink="/users" routerLinkActive="is-active">Users</a>
+      <a mat-button routerLink="/" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">{{ 'nav.catalogue' | t }}</a>
+      <a mat-button routerLink="/compare" routerLinkActive="is-active">
+        {{ 'nav.compare' | t }}@if (compare.count() > 0) { ({{ compare.count() }}) }
+      </a>
+      @if (isAdmin() || isSeller()) {
+        <a mat-button routerLink="/products" routerLinkActive="is-active">{{ 'nav.adminProducts' | t }}</a>
       }
-      <a mat-button href="#features">Features</a>
-      <a mat-button href="#metrics">Metrics</a>
-      <a mat-button routerLink="/login" routerLinkActive="is-active">Login</a>
+      @if (isAdmin()) {
+        <a mat-button routerLink="/users" routerLinkActive="is-active">{{ 'nav.users' | t }}</a>
+      }
+      <button mat-button type="button" (click)="translation.toggle()">{{ 'nav.language' | t }}</button>
       <app-nav-user></app-nav-user>
     </nav>
   </mat-toolbar>
@@ -20,13 +24,8 @@
 
   <footer class="app-footer">
     <div>
-      <p class="footer-title">VersionZero</p>
-      <p class="footer-copy">A product-first Angular starter with a bright systems aesthetic, modern motion-ready surfaces, and room for real business flows.</p>
-    </div>
-    <div class="footer-links">
-      <a href="#features">Features</a>
-      <a href="#metrics">Metrics</a>
-      <a href="#start">Get Started</a>
+      <p class="footer-title">{{ 'app.name' | t }}</p>
+      <p class="footer-copy">{{ 'home.subtitle' | t }}</p>
     </div>
   </footer>
 </div>

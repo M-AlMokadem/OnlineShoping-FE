@@ -1,0 +1,90 @@
+<section class="catalogue">
+  <header class="intro">
+    <h1>{{ 'home.title' | t }}</h1>
+    <p>{{ 'home.subtitle' | t }}</p>
+  </header>
+
+  <form class="filters" (ngSubmit)="search()">
+    <app-search-field
+      [label]="'catalogue.search' | t"
+      [value]="filters.searchedValue ?? ''"
+      (valueChange)="filters.searchedValue = $event"
+      (submitted)="search()"></app-search-field>
+
+    <label>{{ 'catalogue.brand' | t }}
+      <select name="brand" [(ngModel)]="filters.brand" (ngModelChange)="search()">
+        <option value="">{{ 'catalogue.all' | t }}</option>
+        @for (brand of brands(); track brand) { <option [value]="brand">{{ brand }}</option> }
+      </select>
+    </label>
+
+    <label>{{ 'catalogue.category' | t }}
+      <select name="category" [(ngModel)]="filters.category" (ngModelChange)="search()">
+        <option value="">{{ 'catalogue.all' | t }}</option>
+        @for (category of categories; track category) { <option [value]="category">{{ 'category.' + category | t }}</option> }
+      </select>
+    </label>
+
+    <label>{{ 'catalogue.availability' | t }}
+      <select name="availability" [(ngModel)]="filters.availability" (ngModelChange)="search()">
+        <option value="">{{ 'catalogue.all' | t }}</option>
+        @for (availability of availabilities; track availability) { <option [value]="availability">{{ 'availability.' + availability | t }}</option> }
+      </select>
+    </label>
+
+    <label>{{ 'catalogue.minPrice' | t }}
+      <input type="number" min="0" name="minPrice" [(ngModel)]="filters.minPrice" (change)="search()">
+    </label>
+
+    <label>{{ 'catalogue.maxPrice' | t }}
+      <input type="number" min="0" name="maxPrice" [(ngModel)]="filters.maxPrice" (change)="search()">
+    </label>
+
+    <button mat-button type="button" (click)="reset()">{{ 'catalogue.reset' | t }}</button>
+  </form>
+
+  @if (compare.count() > 0) {
+    <div class="compare-bar">
+      <span>{{ compare.count() }} {{ 'compare.selected' | t }}</span>
+      <a mat-flat-button routerLink="/compare" [class.disabled]="compare.count() < 2">{{ 'compare.open' | t }}</a>
+      <button mat-button type="button" (click)="compare.clear()">{{ 'compare.clear' | t }}</button>
+    </div>
+  }
+
+  @if (loading()) {
+    <app-page-state kind="loading" [title]="'catalogue.loading' | t"></app-page-state>
+  } @else if (failed()) {
+    <app-page-state kind="error" [title]="'catalogue.error' | t" (retry)="load()"></app-page-state>
+  } @else if (products().length === 0) {
+    <app-page-state kind="empty" [title]="'catalogue.empty' | t"></app-page-state>
+  } @else {
+    <p class="count">{{ totalCount() }} {{ 'catalogue.results' | t }}</p>
+    <div class="grid">
+      @for (product of products(); track product.id) {
+        <mat-card class="card">
+          @if (product.imageUrl) {
+            <img class="thumb" [src]="product.imageUrl" [alt]="name(product)">
+          }
+          <mat-card-content>
+            <p class="brand">{{ product.brand }} · {{ 'category.' + product.category | t }}</p>
+            <h2>{{ name(product) }}</h2>
+            <p class="price">{{ product.price | currency: product.currency : 'symbol' : '1.0-0' }}</p>
+            <p class="availability" [class.out]="product.availability === 'OutOfStock'">{{ 'availability.' + product.availability | t }}</p>
+          </mat-card-content>
+          <mat-card-actions>
+            <a mat-flat-button [routerLink]="['/catalogue', product.id]">{{ 'catalogue.viewDetails' | t }}</a>
+            <button mat-button type="button" (click)="toggleCompare(product)">
+              {{ (compare.has(product.id) ? 'details.removeFromCompare' : 'compare.add') | t }}
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      }
+    </div>
+
+    <div class="pager">
+      <button mat-button type="button" (click)="goTo(pageNumber() - 1)" [disabled]="pageNumber() <= 1">{{ 'common.previous' | t }}</button>
+      <span>{{ 'common.page' | t }} {{ pageNumber() }} {{ 'common.of' | t }} {{ totalPages() }}</span>
+      <button mat-button type="button" (click)="goTo(pageNumber() + 1)" [disabled]="pageNumber() >= totalPages()">{{ 'common.next' | t }}</button>
+    </div>
+  }
+</section>
