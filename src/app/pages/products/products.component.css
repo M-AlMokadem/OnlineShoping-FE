@@ -1,21 +1,13 @@
 :host { display: block; }
-.admin { display: grid; gap: 1rem; padding: 1rem 0 2rem; }
-header { display: flex; justify-content: space-between; align-items: center; }
-h1 { margin: 0; }
-.toolbar { display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end; }
-label { display: grid; gap: 0.25rem; font-size: 0.85rem; color: #4f5f85; }
-select { padding: 0.5rem; border: 1px solid #c3cbe0; border-radius: 8px; font: inherit; }
-.scroll { overflow-x: auto; }
-table { border-collapse: collapse; width: 100%; }
-th, td { padding: 0.6rem 0.8rem; border-bottom: 1px solid #e0e5f2; text-align: start; }
-.sort { border: 0; background: none; font: inherit; font-weight: 700; cursor: pointer; padding: 0; }
-.row { cursor: pointer; }
-.row:hover, .row:focus { background: #f6f8ff; outline: none; }
-.thumb { width: 44px; height: 44px; object-fit: contain; border-radius: 6px; background: #f6f8ff; display: block; }
-.availability { color: #106c4f; font-size: 0.8rem; }
-.availability.out { color: #9f2c21; }
-.badge { padding: 0.15rem 0.6rem; border-radius: 999px; font-size: 0.8rem; background: #eef2ff; }
-.status-Published { background: #d9f4e8; color: #106c4f; }
-.status-Draft { background: #fff7e0; color: #7a5b00; }
-.status-Inactive { background: #e6e8ef; color: #4f5f85; }
-.status-Archived { background: #fde2df; color: #9f2c21; }
+.list-card { padding: 0; overflow: hidden; }
+.toolbar { display: flex; align-items: center; gap: 0.8rem; padding: 1rem 1.2rem; }
+.search { flex: 1; max-width: 420px; }
+.filters { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 0.8rem 1rem; padding: 0 1.2rem 1rem; border-block-end: 1px solid var(--border); }
+.filters label { display: grid; gap: 0.25rem; font-size: 0.78rem; color: var(--text-muted); }
+.filters select { min-width: 9rem; padding: 0.45rem 0.6rem; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); font: inherit; font-size: 0.85rem; color: var(--text); }
+.sort { padding: 0; border: 0; background: none; font: inherit; font-weight: 700; color: inherit; cursor: pointer; }
+.thumb { display: block; width: 2.8rem; height: 2.8rem; overflow: hidden; border-radius: var(--radius-sm); background: #f1f2f6; }
+.name { display: block; font-weight: 600; text-decoration: none; }
+.name:hover { color: var(--brand); }
+.sku { color: var(--text-muted); font-size: 0.75rem; }
+.pill + .pill { margin-inline-start: 0.3rem; }

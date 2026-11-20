@@ -1,0 +1,51 @@
+<section class="cart">
+  <div class="heading">
+    <h1>{{ 'cart.title' | t }} ({{ cart.count() }})</h1>
+    @if (cart.items().length > 0) {
+      <button type="button" class="clear" (click)="cart.clear()">{{ 'cart.clear' | t }}</button>
+    }
+  </div>
+
+  @if (cart.items().length === 0) {
+    <div class="empty card">
+      <app-icon name="cart"></app-icon>
+      <h2>{{ 'cart.empty' | t }}</h2>
+      <a class="btn btn-primary" routerLink="/catalogue">{{ 'home.shopNow' | t }}</a>
+    </div>
+  } @else {
+    <div class="layout">
+      <ul class="items card">
+        @for (item of cart.items(); track item.productId) {
+          <li class="item">
+            <a class="thumb" [routerLink]="['/catalogue', item.productId]">
+              <app-product-image [src]="item.imageUrl" [alt]="item.name"></app-product-image>
+            </a>
+            <div class="info">
+              <a class="name" [routerLink]="['/catalogue', item.productId]">{{ item.name }}</a>
+              <span class="price">{{ item.price | currency: 'EGP' : 'EGP ' : '1.0-0' }}</span>
+              <div class="stepper" role="group" [attr.aria-label]="'cart.quantity' | t">
+                <button type="button" (click)="setQuantity(item, -1)" [disabled]="item.quantity <= 1" [attr.aria-label]="'cart.decrease' | t"><app-icon name="minus"></app-icon></button>
+                <span>{{ item.quantity }}</span>
+                <button type="button" (click)="setQuantity(item, 1)" [disabled]="item.quantity >= item.maxStock" [attr.aria-label]="'cart.increase' | t"><app-icon name="plus"></app-icon></button>
+              </div>
+            </div>
+            <button type="button" class="remove" (click)="cart.remove(item.productId)" [attr.aria-label]="'cart.remove' | t">
+              <app-icon name="trash"></app-icon>
+            </button>
+          </li>
+        }
+      </ul>
+
+      <aside class="summary card">
+        <h2>{{ 'cart.summary' | t }}</h2>
+        <dl>
+          <div><dt>{{ 'cart.subtotal' | t }}</dt><dd>{{ cart.subtotal() | currency: 'EGP' : 'EGP ' : '1.0-0' }}</dd></div>
+          <div><dt>{{ 'cart.delivery' | t }}</dt><dd class="free">{{ 'cart.free' | t }}</dd></div>
+          <div class="total"><dt>{{ 'cart.total' | t }}</dt><dd>{{ cart.subtotal() | currency: 'EGP' : 'EGP ' : '1.0-0' }}</dd></div>
+        </dl>
+        <button type="button" class="btn btn-primary" (click)="checkout()">{{ 'cart.checkout' | t }}</button>
+        <a class="continue" routerLink="/catalogue">{{ 'cart.continue' | t }}</a>
+      </aside>
+    </div>
+  }
+</section>

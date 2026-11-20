@@ -1,7 +1,5 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
 import { firstValueFrom } from 'rxjs';
 import { ConfirmDialogService } from '../../services/confirm-dialog.service';
 import { PageStateComponent } from '../../components/page-state/page-state.component';
@@ -10,6 +8,7 @@ import { SearchFieldComponent } from '../../components/search-field/search-field
 import { UserFormComponent } from '../../components/user-form/user-form.component';
 import { FilterRequest } from '../../models/filter-request.model';
 import { PaginationRequest } from '../../models/pagination-request.model';
+import { TranslatePipe } from '../../i18n/translate.pipe';
 import { UserFormValue } from '../../models/user-form.model';
 import { ToastService } from '../../services/toast.service';
 import { UserSummaryDto, UsersApiService } from '../../services/users-api.service';
@@ -19,11 +18,10 @@ import { UserSummaryDto, UsersApiService } from '../../services/users-api.servic
   standalone: true,
   imports: [
     CommonModule,
-    MatButtonModule,
-    MatCardModule,
     PageStateComponent,
     PaginationControlsComponent,
     SearchFieldComponent,
+    TranslatePipe,
     UserFormComponent
   ],
   templateUrl: './users.component.html',

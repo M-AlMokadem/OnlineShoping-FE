@@ -1,117 +1,158 @@
-<section class="admin">
-  <header>
-    <h1>{{ 'admin.title' | t }}</h1>
+<section class="adm-page">
+  <div class="adm-head">
+    <h2>{{ 'adm.title.products' | t }}</h2>
     @if (canCreate) {
-      <a mat-flat-button routerLink="/products/new">{{ 'admin.newProduct' | t }}</a>
+      <a class="btn btn-primary" routerLink="/admin/products/new"><app-icon name="plus"></app-icon>{{ 'prod.add' | t }}</a>
     }
-  </header>
-
-  <div class="toolbar" role="search">
-    <app-search-field
-      [label]="'admin.search' | t"
-      [value]="searchTerm"
-      (valueChange)="searchTerm = $event"
-      (submitted)="applySearch()"></app-search-field>
-
-    <label>{{ 'catalogue.category' | t }}
-      <select name="category" [value]="query().categoryId" (change)="setFilter('categoryId', $any($event.target).value)">
-        <option value="" [selected]="query().categoryId === ''">{{ 'catalogue.all' | t }}</option>
-        @for (category of categories(); track category.id) {
-          <option [value]="category.id" [selected]="query().categoryId === category.id">{{ categoryOption(category) }}</option>
-        }
-      </select>
-    </label>
-
-    <label>{{ 'catalogue.brand' | t }}
-      <select name="brand" [value]="query().brandId" (change)="setFilter('brandId', $any($event.target).value)">
-        <option value="" [selected]="query().brandId === ''">{{ 'catalogue.all' | t }}</option>
-        @for (brand of brands(); track brand.id) {
-          <option [value]="brand.id" [selected]="query().brandId === brand.id">{{ brand.name }}</option>
-        }
-      </select>
-    </label>
-
-    <label>{{ 'catalogue.availability' | t }}
-      <select name="availability" [value]="query().availability" (change)="setFilter('availability', $any($event.target).value)">
-        <option value="" [selected]="query().availability === ''">{{ 'catalogue.all' | t }}</option>
-        @for (availability of availabilities; track availability) {
-          <option [value]="availability" [selected]="query().availability === availability">{{ 'availability.' + availability | t }}</option>
-        }
-      </select>
-    </label>
-
-    <label>{{ 'admin.status' | t }}
-      <select name="status" [value]="query().status" (change)="setFilter('status', $any($event.target).value)">
-        <option value="" [selected]="query().status === ''">{{ 'catalogue.all' | t }}</option>
-        @for (status of statuses; track status) {
-          <option [value]="status" [selected]="query().status === status">{{ 'status.' + status | t }}</option>
-        }
-      </select>
-    </label>
-
-    <label>{{ 'admin.pageSize' | t }}
-      <select name="pageSize" [value]="query().pageSize" (change)="setPageSize($any($event.target).value)">
-        @for (size of pageSizes; track size) {
-          <option [value]="size" [selected]="query().pageSize === size">{{ size }}</option>
-        }
-      </select>
-    </label>
-
-    <button mat-button type="button" (click)="reset()">{{ 'catalogue.reset' | t }}</button>
   </div>
 
-  @if (loading()) {
-    <app-page-state kind="loading" [title]="'catalogue.loading' | t"></app-page-state>
-  } @else if (failed()) {
-    <app-page-state kind="error" [title]="'admin.loadError' | t" (retry)="load()"></app-page-state>
-  } @else if (products().length === 0) {
-    <app-page-state kind="empty" [title]="'admin.empty' | t"></app-page-state>
-  } @else {
-    <div class="scroll">
-      <table>
-        <thead>
-          <tr>
-            <th>{{ 'admin.image' | t }}</th>
-            <th>{{ 'admin.sku' | t }}</th>
-            <th [attr.aria-sort]="ariaSort('name')"><button type="button" class="sort" (click)="sortBy('name')">{{ 'admin.name' | t }} {{ sortIndicator('name') }}</button></th>
-            <th>{{ 'catalogue.category' | t }}</th>
-            <th>{{ 'catalogue.brand' | t }}</th>
-            <th [attr.aria-sort]="ariaSort('price')"><button type="button" class="sort" (click)="sortBy('price')">{{ 'admin.priceShort' | t }} {{ sortIndicator('price') }}</button></th>
-            <th [attr.aria-sort]="ariaSort('stock')"><button type="button" class="sort" (click)="sortBy('stock')">{{ 'admin.stock' | t }} {{ sortIndicator('stock') }}</button></th>
-            <th>{{ 'admin.status' | t }}</th>
-            <th [attr.aria-sort]="ariaSort('updated')"><button type="button" class="sort" (click)="sortBy('updated')">{{ 'admin.updated' | t }} {{ sortIndicator('updated') }}</button></th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (product of products(); track product.id) {
-            <tr class="row" tabindex="0" (click)="open(product)" (keyup.enter)="open(product)">
-              <td>
-                @if (product.imageUrl) {
-                  <img class="thumb" [src]="product.imageUrl" [alt]="translation.localized(product.name, product.nameAr)">
-                } @else {
-                  <span class="thumb placeholder"></span>
-                }
-              </td>
-              <td>{{ product.sku || ('common.noValue' | t) }}</td>
-              <td>{{ translation.localized(product.name, product.nameAr) }}</td>
-              <td>{{ categoryLabel(product) }}</td>
-              <td>{{ product.brandName || ('common.noValue' | t) }}</td>
-              <td>{{ product.price == null ? ('common.noValue' | t) : (product.price | currency: product.currency : 'symbol' : '1.0-2') }}</td>
-              <td>{{ product.stockQuantity }} <span class="availability" [class.out]="product.availability === 'OutOfStock'">({{ 'availability.' + product.availability | t }})</span></td>
-              <td><span class="badge" [class]="'badge status-' + product.status">{{ 'status.' + product.status | t }}</span></td>
-              <td>{{ product.lastUpdatedOn | date: 'short' }}</td>
-            </tr>
-          }
-        </tbody>
-      </table>
+  <div class="card adm-card list-card">
+    <div class="toolbar">
+      <div class="search">
+        <app-search-field
+          variant="pill"
+          [label]="'admin.search' | t"
+          [placeholder]="'prod.searchPlaceholder' | t"
+          [value]="searchTerm"
+          (valueChange)="searchTerm = $event"
+          (submitted)="applySearch()"></app-search-field>
+      </div>
+      <button type="button" class="btn btn-outline btn-sm" [attr.aria-expanded]="filtersOpen()" (click)="filtersOpen.set(!filtersOpen())">
+        <app-icon name="filter"></app-icon>{{ 'prod.filters' | t }}
+      </button>
     </div>
 
-    <app-pagination-controls
-      [pageNumber]="query().pageNumber"
-      [pageSize]="query().pageSize"
-      [totalCount]="totalCount()"
-      [totalPages]="totalPages()"
-      (previous)="goTo(query().pageNumber - 1)"
-      (next)="goTo(query().pageNumber + 1)"></app-pagination-controls>
-  }
+    @if (filtersOpen()) {
+      <div class="filters" data-testid="filters">
+        <label>{{ 'catalogue.category' | t }}
+          <select name="category" [value]="query().categoryId" (change)="setFilter('categoryId', $any($event.target).value)">
+            <option value="" [selected]="query().categoryId === ''">{{ 'catalogue.all' | t }}</option>
+            @for (category of categories(); track category.id) {
+              <option [value]="category.id" [selected]="query().categoryId === category.id">{{ categoryOption(category) }}</option>
+            }
+          </select>
+        </label>
+
+        <label>{{ 'catalogue.brand' | t }}
+          <select name="brand" [value]="query().brandId" (change)="setFilter('brandId', $any($event.target).value)">
+            <option value="" [selected]="query().brandId === ''">{{ 'catalogue.all' | t }}</option>
+            @for (brand of brands(); track brand.id) {
+              <option [value]="brand.id" [selected]="query().brandId === brand.id">{{ brand.name }}</option>
+            }
+          </select>
+        </label>
+
+        <label>{{ 'catalogue.availability' | t }}
+          <select name="availability" [value]="query().availability" (change)="setFilter('availability', $any($event.target).value)">
+            <option value="" [selected]="query().availability === ''">{{ 'catalogue.all' | t }}</option>
+            @for (availability of availabilities; track availability) {
+              <option [value]="availability" [selected]="query().availability === availability">{{ 'availability.' + availability | t }}</option>
+            }
+          </select>
+        </label>
+
+        <label>{{ 'admin.status' | t }}
+          <select name="status" [value]="query().status" (change)="setFilter('status', $any($event.target).value)">
+            <option value="" [selected]="query().status === ''">{{ 'catalogue.all' | t }}</option>
+            @for (status of statuses; track status) {
+              <option [value]="status" [selected]="query().status === status">{{ 'status.' + status | t }}</option>
+            }
+          </select>
+        </label>
+
+        <label>{{ 'prod.sortBy' | t }}
+          <select name="sortBy" [value]="query().sortBy" (change)="setSort($any($event.target).value)">
+            @for (option of sortOptions; track option) {
+              <option [value]="option" [selected]="query().sortBy === option">{{ option === 'name' ? ('admin.name' | t) : option === 'price' ? ('admin.priceShort' | t) : option === 'stock' ? ('admin.stock' | t) : ('admin.updated' | t) }}</option>
+            }
+          </select>
+        </label>
+
+        <label>{{ 'prod.direction' | t }}
+          <select name="sortDirection" [value]="query().sortDirection" (change)="setDirection($any($event.target).value)">
+            <option value="asc" [selected]="query().sortDirection === 'asc'">{{ 'prod.asc' | t }}</option>
+            <option value="desc" [selected]="query().sortDirection === 'desc'">{{ 'prod.desc' | t }}</option>
+          </select>
+        </label>
+
+        <label>{{ 'admin.pageSize' | t }}
+          <select name="pageSize" [value]="query().pageSize" (change)="setPageSize($any($event.target).value)">
+            @for (size of pageSizes; track size) {
+              <option [value]="size" [selected]="query().pageSize === size">{{ size }}</option>
+            }
+          </select>
+        </label>
+
+        <button type="button" class="btn-text" (click)="reset()">{{ 'catalogue.reset' | t }}</button>
+      </div>
+    }
+
+    @if (loading()) {
+      <app-page-state kind="loading" [title]="'catalogue.loading' | t"></app-page-state>
+    } @else if (failed()) {
+      <app-page-state kind="error" [title]="'admin.loadError' | t" (retry)="load()"></app-page-state>
+    } @else if (products().length === 0) {
+      <app-page-state kind="empty" [title]="'admin.empty' | t"></app-page-state>
+    } @else {
+      <div class="adm-scroll">
+        <table class="adm-table">
+          <thead>
+            <tr>
+              <th>{{ 'admin.image' | t }}</th>
+              <th [attr.aria-sort]="ariaSort('name')"><button type="button" class="sort" (click)="sortBy('name')">{{ 'admin.name' | t }} {{ sortIndicator('name') }}</button></th>
+              <th>{{ 'catalogue.category' | t }}</th>
+              <th [attr.aria-sort]="ariaSort('price')"><button type="button" class="sort" (click)="sortBy('price')">{{ 'admin.priceShort' | t }} {{ sortIndicator('price') }}</button></th>
+              <th [attr.aria-sort]="ariaSort('stock')"><button type="button" class="sort" (click)="sortBy('stock')">{{ 'admin.stock' | t }} {{ sortIndicator('stock') }}</button></th>
+              <th>{{ 'admin.status' | t }}</th>
+              <th class="row-actions">{{ 'prod.actions' | t }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (product of products(); track product.id) {
+              @let level = stockLevel(product);
+              <tr [class.is-archived]="product.status === 'Archived'">
+                <td><span class="thumb"><app-product-image [src]="product.imageUrl" [alt]="translation.localized(product.name, product.nameAr)"></app-product-image></span></td>
+                <td>
+                  <a class="name" [routerLink]="['/admin/products', product.id]">{{ translation.localized(product.name, product.nameAr) }}</a>
+                  <small class="sku">{{ product.sku || ('common.noValue' | t) }}</small>
+                </td>
+                <td>{{ categoryLabel(product) }}</td>
+                <td class="price">{{ product.price == null ? ('common.noValue' | t) : (product.price | currency: product.currency : 'EGP ' : '1.0-2') }}</td>
+                <td>{{ product.stockQuantity }}</td>
+                <td>
+                  <span class="pill" [class]="'pill ' + statusPillClass(product.status)" data-testid="status-pill">{{ 'prod.pill.' + product.status | t }}</span>
+                  @if (level === 'out') {
+                    <span class="pill pill-danger" data-testid="stock-pill">{{ 'prod.stockOut' | t }}</span>
+                  } @else if (level === 'low') {
+                    <span class="pill pill-warning" data-testid="stock-pill">{{ 'prod.stockLow' | t }}</span>
+                  }
+                </td>
+                <td class="row-actions">
+                  <a class="icon-action" [routerLink]="['/admin/products', product.id]" [attr.aria-label]="'prod.edit' | t" [title]="'prod.edit' | t"><app-icon name="edit"></app-icon></a>
+                  @for (action of actionsFor(product); track action.status) {
+                    <button
+                      type="button"
+                      class="icon-action"
+                      [attr.data-action]="action.status"
+                      [attr.aria-label]="action.labelKey | t"
+                      [title]="action.labelKey | t"
+                      [disabled]="changingId() !== null"
+                      (click)="changeStatus(product, action)"><app-icon [name]="action.icon"></app-icon></button>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <app-pagination-controls
+        [pageNumber]="query().pageNumber"
+        [pageSize]="query().pageSize"
+        [totalCount]="totalCount()"
+        [totalPages]="totalPages()"
+        (previous)="goTo(query().pageNumber - 1)"
+        (next)="goTo(query().pageNumber + 1)"></app-pagination-controls>
+    }
+  </div>
 </section>

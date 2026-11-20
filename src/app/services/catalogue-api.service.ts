@@ -15,12 +15,13 @@ export class CatalogueApiService {
 
   browse(filters: CatalogueFilters, pageNumber: number, pageSize: number): Observable<ApiResult<PagedResult<ProductDto>>> {
     const params: Record<string, unknown> = { pageNumber, pageSize };
-    if (filters.searchedValue?.trim()) { params['searchedValue'] = filters.searchedValue.trim(); }
+    if (filters.searchedValue?.trim()) { params['search'] = filters.searchedValue.trim(); }
     if (filters.brandId) { params['brandId'] = filters.brandId; }
     if (filters.categoryId) { params['categoryId'] = filters.categoryId; }
     if (filters.availability) { params['availability'] = filters.availability; }
     if (filters.minPrice != null) { params['minPrice'] = filters.minPrice; }
     if (filters.maxPrice != null) { params['maxPrice'] = filters.maxPrice; }
+    if (filters.sortBy) { params['sortBy'] = filters.sortBy; params['sortDirection'] = filters.sortDirection ?? 'asc'; }
 
     return this.publicService.getData<HttpResponseModel<PagedResult<ProductDto>>>(this.controller, params)
       .pipe(map((response) => normalizeApiResponse(response)));

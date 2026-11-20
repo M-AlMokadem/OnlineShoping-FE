@@ -1,0 +1,53 @@
+<section class="hero">
+  <div class="hero-copy">
+    <h1>{{ 'home.heroTitle' | t }}</h1>
+    <p>{{ 'home.heroSubtitle' | t }}</p>
+    <a class="btn btn-primary" routerLink="/catalogue">{{ 'home.shopNow' | t }}</a>
+  </div>
+  <div class="hero-art" aria-hidden="true"><app-icon name="phone"></app-icon></div>
+</section>
+
+<ul class="trust card">
+  @for (item of trust; track item.icon) {
+    <li>
+      <span class="trust-icon"><app-icon [name]="item.icon"></app-icon></span>
+      <span>
+        <strong>{{ item.title | t }}</strong>
+        <small>{{ item.text | t }}</small>
+      </span>
+    </li>
+  }
+</ul>
+
+<section class="section">
+  <div class="section-head">
+    <h2>{{ 'home.shopByCategory' | t }}</h2>
+    <a routerLink="/catalogue">{{ 'home.viewAll' | t }}</a>
+  </div>
+  <div class="tiles">
+    @for (category of tiles(); track category.id) {
+      <a class="tile card" routerLink="/catalogue" [queryParams]="{ categoryId: category.id }">
+        <span class="tile-icon"><app-icon [name]="categoryIcon(category)"></app-icon></span>
+        <span class="tile-name">{{ categoryName(category) }}</span>
+      </a>
+    }
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-head">
+    <h2>{{ 'home.featured' | t }}</h2>
+    <a routerLink="/catalogue">{{ 'home.viewAll' | t }}</a>
+  </div>
+  @if (loading()) {
+    <p class="muted">{{ 'catalogue.loading' | t }}</p>
+  } @else if (featured().length === 0) {
+    <p class="muted">{{ 'catalogue.empty' | t }}</p>
+  } @else {
+    <div class="product-grid">
+      @for (product of featured(); track product.id) {
+        <app-product-card [product]="product" [showCompare]="false"></app-product-card>
+      }
+    </div>
+  }
+</section>

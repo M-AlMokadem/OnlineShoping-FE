@@ -1,43 +1,99 @@
 <section class="details">
-  <a mat-button routerLink="/">&larr; {{ 'common.back' | t }}</a>
-
   @if (loading()) {
     <app-page-state kind="loading" [title]="'catalogue.loading' | t"></app-page-state>
   } @else if (notFound() || !product()) {
     <app-page-state kind="empty" [title]="'details.notFound' | t"></app-page-state>
   } @else {
     @let p = product()!;
-    <div class="layout">
-      @if (p.imageUrl) {
-        <img class="image" [src]="p.imageUrl" [alt]="translation.localized(p.name, p.nameAr)">
+    @let discount = discountPercent(p);
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a routerLink="/">{{ 'nav.home' | t }}</a>
+      <span>&rsaquo;</span>
+      @if (p.categoryId) {
+        <a routerLink="/catalogue" [queryParams]="{ categoryId: p.categoryId }">{{ translation.localized(p.categoryName, p.categoryNameAr) }}</a>
+        <span>&rsaquo;</span>
       }
+      <span>{{ translation.localized(p.name, p.nameAr) }}</span>
+    </nav>
+
+    <div class="layout card">
+      <div class="gallery">
+        <div class="thumbs">
+          <button type="button" class="thumb active" [attr.aria-label]="translation.localized(p.name, p.nameAr)">
+            <app-product-image [src]="p.imageUrl" [alt]="translation.localized(p.name, p.nameAr)"></app-product-image>
+          </button>
+        </div>
+        <div class="main-image">
+          <app-product-image [eager]="true" [src]="p.imageUrl" [alt]="translation.localized(p.name, p.nameAr)"></app-product-image>
+        </div>
+      </div>
+
       <div class="summary">
-        <p class="eyebrow">{{ p.brandName }} · {{ translation.localized(p.categoryName, p.categoryNameAr) }}</p>
+        <p class="eyebrow">{{ p.brandName }}</p>
         <h1>{{ translation.localized(p.name, p.nameAr) }}</h1>
-        <p class="price">
-          {{ p.price | currency: p.currency : 'symbol' : '1.0-0' }}
-          @if (p.originalPrice) {
-            <s class="original">{{ p.originalPrice | currency: p.currency : 'symbol' : '1.0-0' }}</s>
+        <div class="price-row">
+          <span class="price">{{ p.price | currency: p.currency : 'EGP ' : '1.0-0' }}</span>
+          @if (p.originalPrice && p.originalPrice > (p.price ?? 0)) {
+            <span class="price-original">{{ p.originalPrice | currency: p.currency : 'EGP ' : '1.0-0' }}</span>
           }
-        </p>
+          @if (discount > 0) { <span class="badge">-{{ discount }}%</span> }
+        </div>
+        <p class="short">{{ translation.localized(p.shortDescription, p.shortDescriptionAr) }}</p>
         @if (p.sku) { <p class="sku">{{ 'details.sku' | t }}: {{ p.sku }}</p> }
-        <p class="availability" [class.out]="p.availability === 'OutOfStock'">{{ 'availability.' + p.availability | t }}</p>
-        <p>{{ translation.localized(p.shortDescription, p.shortDescriptionAr) }}</p>
-        <p>{{ translation.localized(p.description, p.descriptionAr) }}</p>
-        <button mat-flat-button type="button" (click)="toggleCompare(p)">
+        <p class="stock" [class.in-stock]="inStock()" [class.out-of-stock]="!inStock()">
+          <span class="dot"></span>{{ (inStock() ? 'availability.InStock' : 'availability.OutOfStock') | t }}
+        </p>
+
+        <div class="buy-row">
+          <div class="stepper" role="group" [attr.aria-label]="'cart.quantity' | t">
+            <button type="button" (click)="changeQuantity(-1)" [disabled]="!inStock() || quantity() <= 1" [attr.aria-label]="'cart.decrease' | t"><app-icon name="minus"></app-icon></button>
+            <span>{{ quantity() }}</span>
+            <button type="button" (click)="changeQuantity(1)" [disabled]="!inStock() || quantity() >= maxQuantity()" [attr.aria-label]="'cart.increase' | t"><app-icon name="plus"></app-icon></button>
+          </div>
+          <button type="button" class="btn btn-primary add" [disabled]="!inStock() || !p.price" (click)="addToCart(p)">
+            <app-icon name="cart"></app-icon> {{ 'cart.add' | t }}
+          </button>
+          <button type="button" class="icon-btn" [class.active]="wishlist.has(p.id)" (click)="toggleWishlist(p)"
+            [attr.aria-pressed]="wishlist.has(p.id)" [attr.aria-label]="'wishlist.toggle' | t">
+            <app-icon name="heart" [filled]="wishlist.has(p.id)"></app-icon>
+          </button>
+        </div>
+        <button type="button" class="btn btn-outline compare-btn" (click)="toggleCompare(p)">
+          <app-icon name="compare"></app-icon>
           {{ (compare.has(p.id) ? 'details.removeFromCompare' : 'details.addToCompare') | t }}
         </button>
+
+        <div class="info-boxes">
+          <div class="info-box">
+            <app-icon name="truck"></app-icon>
+            <span><strong>{{ 'details.deliveryTo' | t }}</strong><small>{{ 'details.deliveryText' | t }}</small></span>
+            <b class="free">{{ 'cart.free' | t }}</b>
+          </div>
+          <div class="info-box">
+            <app-icon name="shield"></app-icon>
+            <span><strong>{{ 'details.warranty' | t }}</strong><small>{{ 'details.warrantyText' | t }}</small></span>
+          </div>
+        </div>
+
+        <div class="accordion">
+          <details open>
+            <summary>{{ 'details.productDetails' | t }} <app-icon name="chevron"></app-icon></summary>
+            <p>{{ translation.localized(p.description, p.descriptionAr) || ('common.noValue' | t) }}</p>
+          </details>
+          <details>
+            <summary>{{ 'details.specs' | t }} <app-icon name="chevron"></app-icon></summary>
+            <table class="specs">
+              <tbody>
+                @for (spec of p.specifications | keyvalue; track spec.key) {
+                  <tr><th scope="row">{{ spec.key }}</th><td>{{ spec.value }}</td></tr>
+                } @empty {
+                  <tr><td>{{ 'common.noValue' | t }}</td></tr>
+                }
+              </tbody>
+            </table>
+          </details>
+        </div>
       </div>
     </div>
-
-    <section class="block">
-      <h2>{{ 'details.specs' | t }}</h2>
-      <dl>
-        @for (spec of p.specifications | keyvalue; track spec.key) {
-          <dt>{{ spec.key }}</dt>
-          <dd>{{ spec.value }}</dd>
-        }
-      </dl>
-    </section>
   }
 </section>

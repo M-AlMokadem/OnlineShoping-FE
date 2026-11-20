@@ -1,19 +1,16 @@
-<section class="users-page">
-  <mat-card class="users-card" appearance="outlined">
-    <div class="users-header">
-      <div>
-        <p class="eyebrow">Administration</p>
-        <h1>Users Directory</h1>
-      </div>
-
-      <app-search-field
+<section class="adm-page">
+  <div class="adm-head">
+    <h2>{{ 'adm.title.users' | t }}</h2>
+    <app-search-field
         label="Search users"
         placeholder="Name or email"
         [value]="searchTerm()"
         (valueChange)="searchTerm.set($event)"
         (submitted)="search()"
       ></app-search-field>
-    </div>
+  </div>
+
+  <div class="card adm-card users-card">
 
     <app-user-form
       [value]="newUser()"
@@ -31,14 +28,14 @@
         (retry)="search()"
       ></app-page-state>
     } @else if (users().length > 0) {
-      <div class="table-wrap">
-        <table>
+      <div class="adm-scroll">
+        <table class="adm-table">
           <thead>
             <tr>
               <th>User</th>
               <th>Email</th>
               <th>Status</th>
-              <th class="actions">Action</th>
+              <th class="row-actions">Action</th>
             </tr>
           </thead>
           <tbody>
@@ -47,15 +44,15 @@
                 <td>{{ user.fullName }}</td>
                 <td>{{ user.email }}</td>
                 <td>
-                  <span class="status-pill" [class.is-active]="user.isActive">
+                  <span class="pill" [class]="'pill ' + (user.isActive ? 'pill-success' : 'pill-muted')">
                     {{ user.isActive ? 'Active' : 'Inactive' }}
                   </span>
                 </td>
-                <td class="actions">
-                  <button mat-button type="button" (click)="toggleStatus(user)">
+                <td class="row-actions">
+                  <button class="btn-text" type="button" (click)="toggleStatus(user)">
                     {{ user.isActive ? 'Deactivate' : 'Activate' }}
                   </button>
-                  <button mat-button color="warn" type="button" (click)="removeUser(user)">Delete</button>
+                  <button class="btn-text danger" type="button" (click)="removeUser(user)">Delete</button>
                 </td>
               </tr>
             }
@@ -74,5 +71,5 @@
     } @else {
       <app-page-state kind="empty" title="No users found" message="Try a different search term or clear your filter."></app-page-state>
     }
-  </mat-card>
+  </div>
 </section>

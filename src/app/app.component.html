@@ -1,37 +1,100 @@
+@if (isAdminRoute()) {
+  <router-outlet></router-outlet>
+} @else {
 <div class="app-shell">
-  <mat-toolbar class="topbar" color="primary">
-    <a class="brand" routerLink="/">{{ 'app.name' | t }}</a>
-    <span class="topbar-spacer"></span>
-    <nav class="topbar-nav" aria-label="Primary">
-      <a mat-button routerLink="/" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">{{ 'nav.catalogue' | t }}</a>
-      <a mat-button routerLink="/compare" routerLinkActive="is-active">
-        {{ 'nav.compare' | t }}@if (compare.count() > 0) { ({{ compare.count() }}) }
+  <header class="site-header">
+    <div class="container header-main">
+      <a class="brand" routerLink="/">
+        <span class="logo-mark" aria-hidden="true"><app-icon name="cart"></app-icon></span>
+        <span class="brand-name">{{ 'app.name' | t }}</span>
       </a>
-      @if (canViewProducts()) {
-        <a mat-button routerLink="/products" routerLinkActive="is-active">{{ 'nav.adminProducts' | t }}</a>
-      }
-      @if (canManageCategories()) {
-        <a mat-button routerLink="/categories" routerLinkActive="is-active">{{ 'nav.categories' | t }}</a>
-      }
-      @if (canManageBrands()) {
-        <a mat-button routerLink="/brands" routerLinkActive="is-active">{{ 'nav.brands' | t }}</a>
-      }
-      @if (canManageUsers()) {
-        <a mat-button routerLink="/users" routerLinkActive="is-active">{{ 'nav.users' | t }}</a>
-      }
-      <button mat-button type="button" (click)="translation.toggle()">{{ 'nav.language' | t }}</button>
-      <app-nav-user></app-nav-user>
-    </nav>
-  </mat-toolbar>
 
-  <main class="app-main">
+      <div class="header-search">
+        <app-search-field
+          variant="pill"
+          [label]="'header.search' | t"
+          [placeholder]="'header.searchPlaceholder' | t"
+          [value]="searchTerm"
+          (valueChange)="searchTerm = $event"
+          (submitted)="submitSearch()"></app-search-field>
+      </div>
+
+      <nav class="header-actions" aria-label="Primary">
+        <button type="button" class="lang-button" (click)="translation.toggle()">{{ 'nav.language' | t }}</button>
+        <a class="icon-link" routerLink="/compare" [attr.aria-label]="'nav.compare' | t" [title]="'nav.compare' | t">
+          <app-icon name="compare"></app-icon>
+          @if (compare.count() > 0) { <span class="count-badge">{{ compare.count() }}</span> }
+        </a>
+        <a class="icon-link" routerLink="/account" [queryParams]="{ tab: 'wishlist' }" [attr.aria-label]="'account.wishlist' | t" [title]="'account.wishlist' | t">
+          <app-icon name="heart"></app-icon>
+          @if (wishlist.count() > 0) { <span class="count-badge">{{ wishlist.count() }}</span> }
+        </a>
+        <a class="icon-link" routerLink="/account" [queryParams]="{ tab: 'notifications' }" [attr.aria-label]="'account.notifications' | t" [title]="'account.notifications' | t">
+          <app-icon name="bell"></app-icon>
+        </a>
+        <a class="icon-link" routerLink="/cart" [attr.aria-label]="'cart.title' | t" [title]="'cart.title' | t">
+          <app-icon name="cart"></app-icon>
+          @if (cart.count() > 0) { <span class="count-badge">{{ cart.count() }}</span> }
+        </a>
+        <app-nav-user></app-nav-user>
+      </nav>
+    </div>
+
+    <div class="nav-row">
+      <div class="container nav-row-inner">
+        <div class="all-categories">
+          <button type="button" class="all-categories-btn" [attr.aria-expanded]="categoryMenuOpen()" (click)="categoryMenuOpen.set(!categoryMenuOpen())">
+            <app-icon name="menu"></app-icon>
+            {{ 'nav.allCategories' | t }}
+            <app-icon name="chevron"></app-icon>
+          </button>
+          @if (categoryMenuOpen()) {
+            <div class="category-menu card">
+              <a routerLink="/catalogue" (click)="categoryMenuOpen.set(false)">{{ 'catalogue.allProducts' | t }}</a>
+              @for (category of storefront.visibleCategories(); track category.id) {
+                <a routerLink="/catalogue" [queryParams]="{ categoryId: category.id }" (click)="categoryMenuOpen.set(false)">{{ categoryName(category.name, category.nameAr) }}</a>
+              }
+            </div>
+          }
+        </div>
+
+        <nav class="category-links" aria-label="Categories">
+          @for (category of navCategories(); track category.id) {
+            <a routerLink="/catalogue" [queryParams]="{ categoryId: category.id }">{{ categoryName(category.name, category.nameAr) }}</a>
+          }
+        </nav>
+
+        @if (canViewProducts()) {
+          <a class="admin-link" routerLink="/admin">{{ 'nav.admin' | t }}</a>
+        }
+      </div>
+    </div>
+  </header>
+
+  <main class="app-main container">
     <router-outlet></router-outlet>
   </main>
 
   <footer class="app-footer">
-    <div>
-      <p class="footer-title">{{ 'app.name' | t }}</p>
-      <p class="footer-copy">{{ 'home.subtitle' | t }}</p>
+    <div class="container footer-grid">
+      <div>
+        <p class="footer-title">{{ 'app.name' | t }}</p>
+        <p class="footer-copy">{{ 'footer.tagline' | t }}</p>
+      </div>
+      <div>
+        <p class="footer-heading">{{ 'footer.shop' | t }}</p>
+        <a routerLink="/catalogue">{{ 'catalogue.allProducts' | t }}</a>
+        <a routerLink="/compare">{{ 'nav.compare' | t }}</a>
+        <a routerLink="/cart">{{ 'cart.title' | t }}</a>
+      </div>
+      <div>
+        <p class="footer-heading">{{ 'account.title' | t }}</p>
+        <a routerLink="/account">{{ 'account.orders' | t }}</a>
+        <a routerLink="/account" [queryParams]="{ tab: 'wishlist' }">{{ 'account.wishlist' | t }}</a>
+        <a routerLink="/account" [queryParams]="{ tab: 'help' }">{{ 'account.help' | t }}</a>
+      </div>
     </div>
+    <p class="footer-legal container">&copy; {{ 'app.name' | t }}</p>
   </footer>
 </div>
+}

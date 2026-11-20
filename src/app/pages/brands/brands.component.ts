@@ -1,10 +1,10 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
-import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { IconComponent } from '../../components/icon/icon.component';
 import { PageStateComponent } from '../../components/page-state/page-state.component';
 import { TranslatePipe } from '../../i18n/translate.pipe';
 import { TranslationService } from '../../i18n/translation.service';
@@ -17,7 +17,7 @@ import { applyServerErrors } from '../../utils/server-errors';
 @Component({
   selector: 'app-brands',
   standalone: true,
-  imports: [ReactiveFormsModule, MatButtonModule, MatCheckboxModule, MatFormFieldModule, MatInputModule, PageStateComponent, TranslatePipe],
+  imports: [ReactiveFormsModule, IconComponent, MatCheckboxModule, MatFormFieldModule, MatInputModule, PageStateComponent, TranslatePipe],
   templateUrl: './brands.component.html',
   styleUrl: './brands.component.css'
 })

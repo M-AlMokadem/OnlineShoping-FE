@@ -5,7 +5,22 @@ import { unsavedChangesGuard } from './guards/unsaved-changes.guard';
 export const routes: Routes = [
 	{
 		path: '',
+		pathMatch: 'full',
+		loadComponent: () => import('./pages/home/home.component').then((module) => module.HomeComponent)
+	},
+	{
+		path: 'catalogue',
+		pathMatch: 'full',
 		loadComponent: () => import('./pages/catalogue/catalogue.component').then((module) => module.CatalogueComponent)
+	},
+	{
+		path: 'cart',
+		loadComponent: () => import('./pages/cart/cart.component').then((module) => module.CartComponent)
+	},
+	{
+		path: 'account',
+		canActivate: [authGuard],
+		loadComponent: () => import('./pages/account/account.component').then((module) => module.AccountComponent)
 	},
 	{
 		path: 'catalogue/:id',
@@ -32,43 +47,64 @@ export const routes: Routes = [
 		loadComponent: () => import('./pages/register/register.component').then((module) => module.RegisterComponent)
 	},
 	{
-		path: 'users',
+		path: 'admin',
 		canActivate: [authGuard],
-		data: { permissions: ['Users.Manage'] },
-		loadComponent: () => import('./pages/users/users.component').then((module) => module.UsersComponent)
+		loadComponent: () => import('./pages/admin/admin-layout.component').then((module) => module.AdminLayoutComponent),
+		children: [
+			{
+				path: '',
+				pathMatch: 'full',
+				canActivate: [authGuard],
+				data: { permissions: ['Products.View'] },
+				loadComponent: () => import('./pages/dashboard/dashboard.component').then((module) => module.DashboardComponent)
+			},
+			{
+				path: 'products',
+				pathMatch: 'full',
+				canActivate: [authGuard],
+				data: { permissions: ['Products.View'] },
+				loadComponent: () => import('./pages/products/products.component').then((module) => module.ProductsComponent)
+			},
+			{
+				path: 'products/new',
+				canActivate: [authGuard],
+				canDeactivate: [unsavedChangesGuard],
+				data: { permissions: ['Products.Create'] },
+				loadComponent: () => import('./pages/product-form/product-form.component').then((module) => module.ProductFormComponent)
+			},
+			{
+				path: 'products/:id',
+				canActivate: [authGuard],
+				canDeactivate: [unsavedChangesGuard],
+				data: { permissions: ['Products.View'] },
+				loadComponent: () => import('./pages/product-form/product-form.component').then((module) => module.ProductFormComponent)
+			},
+			{
+				path: 'categories',
+				canActivate: [authGuard],
+				data: { permissions: ['Categories.Manage'] },
+				loadComponent: () => import('./pages/categories/categories.component').then((module) => module.CategoriesComponent)
+			},
+			{
+				path: 'brands',
+				canActivate: [authGuard],
+				data: { permissions: ['Brands.Manage'] },
+				loadComponent: () => import('./pages/brands/brands.component').then((module) => module.BrandsComponent)
+			},
+			{
+				path: 'users',
+				canActivate: [authGuard],
+				data: { permissions: ['Users.Manage'] },
+				loadComponent: () => import('./pages/users/users.component').then((module) => module.UsersComponent)
+			}
+		]
 	},
-	{
-		path: 'products',
-		canActivate: [authGuard],
-		data: { permissions: ['Products.View'] },
-		loadComponent: () => import('./pages/products/products.component').then((module) => module.ProductsComponent)
-	},
-	{
-		path: 'products/new',
-		canActivate: [authGuard],
-		canDeactivate: [unsavedChangesGuard],
-		data: { permissions: ['Products.Create'] },
-		loadComponent: () => import('./pages/product-form/product-form.component').then((module) => module.ProductFormComponent)
-	},
-	{
-		path: 'products/:id',
-		canActivate: [authGuard],
-		canDeactivate: [unsavedChangesGuard],
-		data: { permissions: ['Products.View'] },
-		loadComponent: () => import('./pages/product-form/product-form.component').then((module) => module.ProductFormComponent)
-	},
-	{
-		path: 'categories',
-		canActivate: [authGuard],
-		data: { permissions: ['Categories.Manage'] },
-		loadComponent: () => import('./pages/categories/categories.component').then((module) => module.CategoriesComponent)
-	},
-	{
-		path: 'brands',
-		canActivate: [authGuard],
-		data: { permissions: ['Brands.Manage'] },
-		loadComponent: () => import('./pages/brands/brands.component').then((module) => module.BrandsComponent)
-	},
+	{ path: 'products', pathMatch: 'full', redirectTo: 'admin/products' },
+	{ path: 'products/new', pathMatch: 'full', redirectTo: 'admin/products/new' },
+	{ path: 'products/:id', redirectTo: 'admin/products/:id' },
+	{ path: 'categories', pathMatch: 'full', redirectTo: 'admin/categories' },
+	{ path: 'brands', pathMatch: 'full', redirectTo: 'admin/brands' },
+	{ path: 'users', pathMatch: 'full', redirectTo: 'admin/users' },
 	{
 		path: '**',
 		redirectTo: ''

@@ -1,0 +1,35 @@
+:host { display: block; }
+.cart { display: grid; gap: 1rem; }
+.heading { display: flex; align-items: center; justify-content: space-between; }
+h1 { margin: 0; font-size: 1.5rem; }
+.clear { border: 0; background: none; color: var(--brand); font: inherit; font-weight: 600; cursor: pointer; }
+.empty { display: grid; justify-items: center; gap: 1rem; padding: 3rem 1rem; color: var(--text-muted); font-size: 2.4rem; }
+.empty h2 { margin: 0; font-size: 1.1rem; color: var(--text); }
+.empty .btn { font-size: 1rem; }
+.layout { display: grid; grid-template-columns: 1fr 340px; gap: 1.2rem; align-items: start; }
+.items { margin: 0; padding: 0.4rem 1.2rem; list-style: none; }
+.item { display: flex; align-items: center; gap: 1rem; padding: 1rem 0; border-block-end: 1px solid var(--border); }
+.item:last-child { border-block-end: 0; }
+.thumb { flex: none; width: 5rem; height: 5rem; overflow: hidden; border-radius: var(--radius-sm); }
+.info { display: grid; flex: 1; gap: 0.4rem; justify-items: start; }
+.name { font-weight: 600; text-decoration: none; }
+.name:hover { color: var(--brand); }
+.stepper { display: inline-flex; align-items: center; border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.stepper button { display: grid; place-items: center; width: 2rem; height: 2rem; border: 0; background: none; cursor: pointer; color: var(--text); }
+.stepper button:disabled { color: #b4b9c9; cursor: not-allowed; }
+.stepper span { min-width: 1.8rem; text-align: center; font-weight: 600; }
+.remove { display: grid; place-items: center; width: 2.2rem; height: 2.2rem; border: 0; border-radius: 50%; background: none; color: var(--text-muted); cursor: pointer; }
+.remove:hover { background: var(--brand-soft); color: var(--brand); }
+.summary { display: grid; gap: 1rem; padding: 1.2rem; }
+.summary h2 { margin: 0; font-size: 1.1rem; }
+dl { display: grid; gap: 0.7rem; margin: 0; }
+dl div { display: flex; justify-content: space-between; }
+dt { color: var(--text-muted); }
+dd { margin: 0; font-weight: 600; }
+.free { color: var(--success); }
+.total { padding-block-start: 0.8rem; border-block-start: 1px solid var(--border); font-size: 1.05rem; }
+.total dt { color: var(--text); font-weight: 700; }
+.continue { text-align: center; color: var(--text-muted); font-size: 0.88rem; }
+@media (max-width: 860px) {
+  .layout { grid-template-columns: 1fr; }
+}

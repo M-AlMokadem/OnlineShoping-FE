@@ -7,7 +7,7 @@
     <app-page-state kind="error" [title]="'compare.error' | t" (retry)="load()"></app-page-state>
   } @else if (products().length < 2) {
     <app-page-state kind="empty" [title]="'compare.hint' | t"></app-page-state>
-    <a mat-flat-button routerLink="/">{{ 'nav.catalogue' | t }}</a>
+    <a mat-flat-button routerLink="/catalogue">{{ 'nav.catalogue' | t }}</a>
   } @else {
     <p class="hint">{{ 'compare.differences' | t }}</p>
     <div class="scroll">

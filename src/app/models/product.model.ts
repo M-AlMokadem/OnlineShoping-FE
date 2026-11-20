@@ -100,4 +100,6 @@ export interface CatalogueFilters {
   availability?: ProductAvailability | '';
   minPrice?: number | null;
   maxPrice?: number | null;
+  sortBy?: ProductSortBy;
+  sortDirection?: SortDirection;
 }

@@ -1,9 +1,10 @@
-import { CurrencyPipe, DatePipe } from '@angular/common';
+import { CurrencyPipe } from '@angular/common';
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Params, Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { MatButtonModule } from '@angular/material/button';
+import { IconComponent } from '../../components/icon/icon.component';
+import { ProductImageComponent } from '../../components/product-image/product-image.component';
 import { PageStateComponent } from '../../components/page-state/page-state.component';
 import { PaginationControlsComponent } from '../../components/pagination-controls/pagination-controls.component';
 import { SearchFieldComponent } from '../../components/search-field/search-field.component';
@@ -23,6 +24,9 @@ import {
 import { AuthService } from '../../services/auth.service';
 import { BrandsApiService } from '../../services/brands-api.service';
 import { CategoriesApiService } from '../../services/categories-api.service';
+import { ConfirmDialogService } from '../../services/confirm-dialog.service';
+import { ToastService } from '../../services/toast.service';
+import { StatusAction, statusActionsFor, statusPillClass, stockLevel } from '../../utils/product-status';
 import { ProductListStateService } from '../../services/product-list-state.service';
 import { ProductsApiService } from '../../services/products-api.service';
 
@@ -65,7 +69,7 @@ export function toQueryParams(query: ProductListQuery): Params {
 @Component({
   selector: 'app-products',
   standalone: true,
-  imports: [CurrencyPipe, DatePipe, RouterLink, MatButtonModule, PageStateComponent, PaginationControlsComponent, SearchFieldComponent, TranslatePipe],
+  imports: [CurrencyPipe, RouterLink, IconComponent, ProductImageComponent, PageStateComponent, PaginationControlsComponent, SearchFieldComponent, TranslatePipe],
   templateUrl: './products.component.html',
   styleUrl: './products.component.css'
 })
@@ -77,6 +81,8 @@ export class ProductsComponent {
   private readonly router = inject(Router);
   private readonly auth = inject(AuthService);
   private readonly listState = inject(ProductListStateService);
+  private readonly confirmDialog = inject(ConfirmDialogService);
+  private readonly toast = inject(ToastService);
   private loadToken = 0;
 
   protected readonly translation = inject(TranslationService);
@@ -84,6 +90,9 @@ export class ProductsComponent {
   protected readonly availabilities = PRODUCT_AVAILABILITIES;
   protected readonly statuses = PRODUCT_STATUSES;
   protected readonly pageSizes = PRODUCT_PAGE_SIZES;
+  protected readonly sortOptions: ProductSortBy[] = ['name', 'price', 'stock', 'updated'];
+  protected readonly statusPillClass = statusPillClass;
+  protected readonly stockLevel = stockLevel;
 
   protected readonly query = signal<ProductListQuery>({ ...DEFAULT_PRODUCT_QUERY });
   protected readonly products = signal<ProductDto[]>([]);
@@ -93,6 +102,8 @@ export class ProductsComponent {
   protected readonly totalPages = signal(1);
   protected readonly loading = signal(false);
   protected readonly failed = signal(false);
+  protected readonly filtersOpen = signal(false);
+  protected readonly changingId = signal<string | null>(null);
 
   protected searchTerm = '';
 
@@ -103,6 +114,9 @@ export class ProductsComponent {
       this.query.set(query);
       this.listState.queryParams = toQueryParams(query);
       this.searchTerm = query.search;
+      if (query.categoryId || query.brandId || query.availability || query.status) {
+        this.filtersOpen.set(true);
+      }
       void this.load();
     });
   }
@@ -113,6 +127,46 @@ export class ProductsComponent {
 
   protected setFilter(key: 'categoryId' | 'brandId' | 'availability' | 'status', value: string): void {
     this.navigate({ [key]: value, pageNumber: 1 } as Partial<ProductListQuery>);
+  }
+
+  protected setSort(sortBy: string): void {
+    this.navigate({ sortBy: sortBy as ProductSortBy, pageNumber: 1 });
+  }
+
+  protected setDirection(sortDirection: string): void {
+    this.navigate({ sortDirection: sortDirection === 'asc' ? 'asc' : 'desc', pageNumber: 1 });
+  }
+
+  protected actionsFor(product: ProductDto): StatusAction[] {
+    return statusActionsFor(product.status, (permission) => this.auth.hasPermission(permission));
+  }
+
+  protected async changeStatus(product: ProductDto, action: StatusAction): Promise<void> {
+    if (this.changingId()) {
+      return;
+    }
+    if (action.status === 'Archived') {
+      const confirmed = await this.confirmDialog.confirm({
+        title: this.translation.t('product.archiveTitle'),
+        message: this.translation.t('product.archiveMessage'),
+        confirmLabel: this.translation.t('product.archive'),
+        cancelLabel: this.translation.t('common.cancel')
+      });
+      if (!confirmed) {
+        return;
+      }
+    }
+
+    this.changingId.set(product.id);
+    try {
+      const response = await firstValueFrom(this.api.setStatus(product.id, action.status));
+      this.toast.showSuccess(response.message || this.translation.t('product.statusUpdated'));
+      await this.load();
+    } catch {
+      // The HTTP error interceptor already reports the failure.
+    } finally {
+      this.changingId.set(null);
+    }
   }
 
   protected setPageSize(value: string): void {
@@ -153,7 +207,7 @@ export class ProductsComponent {
   }
 
   protected open(product: ProductDto): void {
-    void this.router.navigate(['/products', product.id]);
+    void this.router.navigate(['/admin/products', product.id]);
   }
 
   protected categoryLabel(product: ProductDto): string {

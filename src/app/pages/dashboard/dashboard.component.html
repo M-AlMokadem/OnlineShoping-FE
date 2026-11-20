@@ -1,0 +1,71 @@
+@if (loading()) {
+  <app-page-state kind="loading" [title]="'catalogue.loading' | t"></app-page-state>
+} @else if (failed()) {
+  <app-page-state kind="error" [title]="'dash.loadError' | t" (retry)="load()"></app-page-state>
+} @else if (summary(); as data) {
+  <section class="kpis">
+    @for (kpi of kpis(); track kpi.key) {
+      <article class="card kpi" [attr.data-testid]="kpi.key">
+        <span class="kpi-icon" [class]="'kpi-icon tone-' + kpi.tone"><app-icon [name]="kpi.icon"></app-icon></span>
+        <div>
+          <p class="kpi-label">{{ kpi.key | t }}</p>
+          <p class="kpi-value">{{ kpi.value }}</p>
+          <p class="kpi-hint">{{ kpi.hint }}</p>
+        </div>
+      </article>
+    }
+  </section>
+
+  <div class="panels">
+    <section class="card panel">
+      <h2>{{ 'dash.byCategory' | t }}</h2>
+      @if (categoryBars().length === 0) {
+        <p class="muted">{{ 'dash.noCategories' | t }}</p>
+      } @else {
+        <ul class="bars" data-testid="category-bars">
+          @for (bar of categoryBars(); track bar.id) {
+            <li>
+              <span class="bar-label">{{ bar.label }}</span>
+              <span class="bar-track"><span class="bar-fill" [style.width.%]="bar.percent"></span></span>
+              <span class="bar-count">{{ bar.count }}</span>
+            </li>
+          }
+        </ul>
+      }
+
+      <h2 class="sub">{{ 'dash.byStatus' | t }}</h2>
+      <ul class="bars" data-testid="status-bars">
+        @for (bar of statusBars(); track bar.status) {
+          <li>
+            <span class="bar-label">{{ 'status.' + bar.status | t }}</span>
+            <span class="bar-track"><span class="bar-fill" [class]="'bar-fill st-' + bar.status" [style.width.%]="bar.percent"></span></span>
+            <span class="bar-count">{{ bar.count }}</span>
+          </li>
+        }
+      </ul>
+    </section>
+
+    <section class="card panel">
+      <div class="panel-head">
+        <h2>{{ 'dash.recent' | t }}</h2>
+        <a routerLink="/admin/products">{{ 'dash.viewAll' | t }}</a>
+      </div>
+      @if (data.recentActivities.length === 0) {
+        <p class="muted">{{ 'dash.noActivity' | t }}</p>
+      } @else {
+        <ul class="activities" data-testid="activities">
+          @for (activity of data.recentActivities; track $index) {
+            <li>
+              <span class="act-icon"><app-icon [name]="activityIcon(activity)"></app-icon></span>
+              <div class="act-body">
+                <strong>{{ activityLabel(activity) }}</strong>
+                <small>{{ activity.productName }}@if (activity.userName) { – {{ 'dash.by' | t }} {{ activity.userName }} }</small>
+              </div>
+              <time class="act-time" [attr.datetime]="activity.createdOnUtc">{{ relativeTime(activity.createdOnUtc) }}</time>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  </div>
+}

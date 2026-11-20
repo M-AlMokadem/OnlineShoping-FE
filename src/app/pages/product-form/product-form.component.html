@@ -1,201 +1,268 @@
-<section class="product-page">
+<section class="adm-page">
   @let back = backLink();
-  <a mat-button [routerLink]="back.path" [queryParams]="back.queryParams">&larr; {{ 'common.back' | t }}</a>
 
   @if (loading()) {
     <app-page-state kind="loading" [title]="'catalogue.loading' | t"></app-page-state>
   } @else if (notFound()) {
     <app-page-state kind="empty" [title]="'product.notFound' | t"></app-page-state>
   } @else {
-    <header class="page-header">
-      <h1>{{ (isNew ? 'admin.newProduct' : 'admin.editProduct') | t }}</h1>
-      @if (status(); as currentStatus) {
-        <span class="badge" [class]="'badge status-' + currentStatus" data-testid="status-chip">{{ 'status.' + currentStatus | t }}</span>
-      }
-    </header>
-
-    @if (isArchived()) {
-      <p class="notice" data-testid="archived-notice">{{ 'product.archivedReadOnly' | t }}</p>
-    }
-
-    @if (!isNew && statusActions().length > 0) {
-      <div class="status-actions">
-        @for (action of statusActions(); track action.status) {
-          <button
-            mat-stroked-button
-            type="button"
-            [attr.data-action]="action.status"
-            [disabled]="saving() || form.dirty || (action.status === 'Published' && readiness() !== null && !readiness()!.isReady)"
-            (click)="changeStatus(action)">{{ action.labelKey | t }}</button>
-        }
-      </div>
-    }
-
-    @if (!isNew && !isArchived()) {
-      @if (readiness(); as ready) {
-        <div class="readiness" [class.ready]="ready.isReady" data-testid="readiness">
-          <h2>{{ 'readiness.title' | t }}</h2>
-          @if (ready.isReady) {
-            <p>{{ 'readiness.ready' | t }}</p>
-          } @else {
-            <p>{{ 'readiness.missing' | t }}</p>
-            <ul>
-              @for (field of ready.missingFields; track field) { <li>{{ missingLabel(field) }}</li> }
-            </ul>
+    <form class="product-form" [formGroup]="form" (ngSubmit)="save()">
+      <div class="adm-head">
+        <div class="title">
+          <h2>{{ (isNew ? 'adm.title.productNew' : 'adm.title.productEdit') | t }}</h2>
+          @if (status(); as currentStatus) {
+            <span class="pill" [class]="'pill ' + statusPillClass(currentStatus)" data-testid="status-chip">{{ 'prod.pill.' + currentStatus | t }}</span>
           }
         </div>
-      }
-    }
-
-    @if (otherErrors().length > 0) {
-      <ul class="notice error">
-        @for (message of otherErrors(); track message) { <li>{{ message }}</li> }
-      </ul>
-    }
-
-    <form class="form" [formGroup]="form" (ngSubmit)="save()">
-      <div class="fields">
-        <mat-form-field appearance="outline">
-          <mat-label>{{ 'admin.nameEn' | t }}</mat-label>
-          <input matInput formControlName="name">
-          <mat-error>{{ errorText('name') }}</mat-error>
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>{{ 'admin.nameAr' | t }}</mat-label>
-          <input matInput formControlName="nameAr" dir="rtl">
-          <mat-error>{{ errorText('nameAr') }}</mat-error>
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>{{ 'admin.sku' | t }}</mat-label>
-          <input matInput formControlName="sku">
-          <mat-error>{{ errorText('sku') }}</mat-error>
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>{{ 'catalogue.category' | t }}</mat-label>
-          <mat-select formControlName="categoryId">
-            <mat-option [value]="null">{{ 'common.noValue' | t }}</mat-option>
-            @for (category of categoryOptions(); track category.id) {
-              <mat-option [value]="category.id">{{ categoryName(category) }}</mat-option>
-            }
-          </mat-select>
-          <mat-error>{{ errorText('categoryId') }}</mat-error>
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>{{ 'catalogue.brand' | t }}</mat-label>
-          <mat-select formControlName="brandId">
-            <mat-option [value]="null">{{ 'common.noValue' | t }}</mat-option>
-            @for (brand of brandOptions(); track brand.id) {
-              <mat-option [value]="brand.id">{{ brand.name }}</mat-option>
-            }
-          </mat-select>
-          <mat-error>{{ errorText('brandId') }}</mat-error>
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>{{ 'admin.price' | t }}</mat-label>
-          <input matInput type="number" min="0" step="0.01" formControlName="price">
-          <mat-error>{{ errorText('price') }}</mat-error>
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>{{ 'admin.originalPrice' | t }}</mat-label>
-          <input matInput type="number" min="0" step="0.01" formControlName="originalPrice">
-          <mat-error>{{ errorText('originalPrice') }}</mat-error>
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>{{ 'admin.stock' | t }}</mat-label>
-          <input matInput type="number" min="0" step="1" formControlName="stockQuantity">
-          <mat-error>{{ errorText('stockQuantity') }}</mat-error>
-        </mat-form-field>
-        <mat-form-field appearance="outline" class="wide">
-          <mat-label>{{ 'admin.imageUrl' | t }}</mat-label>
-          <input matInput formControlName="imageUrl">
-          <mat-error>{{ errorText('imageUrl') }}</mat-error>
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>{{ 'admin.shortDescEn' | t }}</mat-label>
-          <textarea matInput rows="2" formControlName="shortDescription"></textarea>
-          <mat-error>{{ errorText('shortDescription') }}</mat-error>
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>{{ 'admin.shortDescAr' | t }}</mat-label>
-          <textarea matInput rows="2" formControlName="shortDescriptionAr" dir="rtl"></textarea>
-          <mat-error>{{ errorText('shortDescriptionAr') }}</mat-error>
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>{{ 'admin.descEn' | t }}</mat-label>
-          <textarea matInput rows="5" formControlName="description"></textarea>
-          <mat-error>{{ errorText('description') }}</mat-error>
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>{{ 'admin.descAr' | t }}</mat-label>
-          <textarea matInput rows="5" formControlName="descriptionAr" dir="rtl"></textarea>
-          <mat-error>{{ errorText('descriptionAr') }}</mat-error>
-        </mat-form-field>
+        <div class="adm-actions">
+          <a class="btn btn-outline" [routerLink]="back.path" [queryParams]="back.queryParams">{{ 'common.cancel' | t }}</a>
+          @if (canSave()) {
+            <button class="btn btn-primary" type="submit" [disabled]="saving()">{{ 'common.save' | t }}</button>
+          }
+        </div>
       </div>
 
-      <fieldset class="specs">
-        <legend>{{ 'admin.specs' | t }}</legend>
-        @for (spec of specs.controls; track spec; let i = $index) {
-          <div class="spec" [formGroup]="$any(spec)">
-            <mat-form-field appearance="outline" subscriptSizing="dynamic">
-              <mat-label>{{ 'admin.specKey' | t }}</mat-label>
-              <input matInput formControlName="key">
-            </mat-form-field>
-            <mat-form-field appearance="outline" subscriptSizing="dynamic">
-              <mat-label>{{ 'admin.specValue' | t }}</mat-label>
-              <input matInput formControlName="value">
-            </mat-form-field>
-            @if (canSave()) {
-              <button mat-button type="button" (click)="removeSpec(i)">{{ 'admin.removeSpec' | t }}</button>
+      @if (isArchived()) {
+        <p class="adm-notice" data-testid="archived-notice">{{ 'product.archivedReadOnly' | t }}</p>
+      }
+
+      @if (otherErrors().length > 0) {
+        <ul class="adm-notice error">
+          @for (message of otherErrors(); track message) { <li>{{ message }}</li> }
+        </ul>
+      }
+
+      <div class="layout">
+        <nav class="card section-nav" [attr.aria-label]="'pf.nav' | t">
+          @for (section of sections(); track section.id) {
+            <button type="button" [class.active]="activeSection() === section.id" [attr.aria-current]="activeSection() === section.id ? 'true' : null" (click)="setSection(section.id)">{{ section.labelKey | t }}</button>
+          }
+        </nav>
+
+        <div class="card panel">
+          <div class="section" [hidden]="activeSection() !== 'basic'">
+            <div class="basic">
+              <div class="fields">
+                <mat-form-field appearance="outline">
+                  <mat-label>{{ 'pf.productName' | t }}</mat-label>
+                  <input matInput formControlName="name">
+                  <mat-error>{{ errorText('name') }}</mat-error>
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>{{ 'admin.sku' | t }}</mat-label>
+                  <input matInput formControlName="sku">
+                  <mat-error>{{ errorText('sku') }}</mat-error>
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>{{ 'catalogue.brand' | t }}</mat-label>
+                  <mat-select formControlName="brandId">
+                    <mat-option [value]="null">{{ 'common.noValue' | t }}</mat-option>
+                    @for (brand of brandOptions(); track brand.id) {
+                      <mat-option [value]="brand.id">{{ brand.name }}</mat-option>
+                    }
+                  </mat-select>
+                  <mat-error>{{ errorText('brandId') }}</mat-error>
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>{{ 'catalogue.category' | t }}</mat-label>
+                  <mat-select formControlName="categoryId">
+                    <mat-option [value]="null">{{ 'common.noValue' | t }}</mat-option>
+                    @for (category of categoryOptions(); track category.id) {
+                      <mat-option [value]="category.id">{{ categoryName(category) }}</mat-option>
+                    }
+                  </mat-select>
+                  <mat-error>{{ errorText('categoryId') }}</mat-error>
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="wide">
+                  <mat-label>{{ 'pf.shortDescription' | t }}</mat-label>
+                  <textarea matInput rows="2" formControlName="shortDescription"></textarea>
+                  <mat-error>{{ errorText('shortDescription') }}</mat-error>
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="wide">
+                  <mat-label>{{ 'pf.fullDescription' | t }}</mat-label>
+                  <textarea matInput rows="5" formControlName="description"></textarea>
+                  <mat-error>{{ errorText('description') }}</mat-error>
+                </mat-form-field>
+
+                <h3 class="wide group-title">{{ 'pf.arabicContent' | t }}</h3>
+                <mat-form-field appearance="outline" class="wide">
+                  <mat-label>{{ 'admin.nameAr' | t }}</mat-label>
+                  <input matInput formControlName="nameAr" dir="rtl">
+                  <mat-error>{{ errorText('nameAr') }}</mat-error>
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="wide">
+                  <mat-label>{{ 'admin.shortDescAr' | t }}</mat-label>
+                  <textarea matInput rows="2" formControlName="shortDescriptionAr" dir="rtl"></textarea>
+                  <mat-error>{{ errorText('shortDescriptionAr') }}</mat-error>
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="wide">
+                  <mat-label>{{ 'admin.descAr' | t }}</mat-label>
+                  <textarea matInput rows="5" formControlName="descriptionAr" dir="rtl"></textarea>
+                  <mat-error>{{ errorText('descriptionAr') }}</mat-error>
+                </mat-form-field>
+              </div>
+
+              <aside class="image-side">
+                <h3>{{ 'pf.productImages' | t }}</h3>
+                <div class="image-main"><app-product-image [src]="previewImage()" [alt]="'pf.productImages' | t"></app-product-image></div>
+                <button type="button" class="image-add" (click)="setSection('images')"><app-icon name="plus"></app-icon>{{ 'pf.addImage' | t }}</button>
+              </aside>
+            </div>
+          </div>
+
+          <div class="section" [hidden]="activeSection() !== 'pricing'">
+            <div class="fields">
+              <mat-form-field appearance="outline">
+                <mat-label>{{ 'admin.price' | t }}</mat-label>
+                <input matInput type="number" min="0" step="0.01" formControlName="price">
+                <mat-error>{{ errorText('price') }}</mat-error>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>{{ 'admin.originalPrice' | t }}</mat-label>
+                <input matInput type="number" min="0" step="0.01" formControlName="originalPrice">
+                <mat-error>{{ errorText('originalPrice') }}</mat-error>
+              </mat-form-field>
+            </div>
+            <p class="preview" data-testid="discount-preview">
+              {{ 'pf.discount' | t }}:
+              @if (discountPercent() > 0) {
+                <span class="pill pill-danger">-{{ discountPercent() }}%</span>
+              } @else {
+                <span class="muted">{{ 'pf.noDiscount' | t }}</span>
+              }
+            </p>
+          </div>
+
+          <div class="section" [hidden]="activeSection() !== 'inventory'">
+            <div class="fields">
+              <mat-form-field appearance="outline">
+                <mat-label>{{ 'admin.stock' | t }}</mat-label>
+                <input matInput type="number" min="0" step="1" formControlName="stockQuantity">
+                <mat-error>{{ errorText('stockQuantity') }}</mat-error>
+              </mat-form-field>
+            </div>
+            <p class="preview" data-testid="stock-preview">
+              {{ 'pf.availability' | t }}:
+              <span [class]="stockPreview() === 'InStock' ? 'in-stock' : 'out-of-stock'">{{ 'availability.' + stockPreview() | t }}</span>
+              @if (lowStock()) { <span class="pill pill-warning">{{ 'prod.stockLow' | t }}</span> }
+            </p>
+          </div>
+
+          <div class="section" [hidden]="activeSection() !== 'images'">
+            <div class="fields">
+              <mat-form-field appearance="outline" class="wide">
+                <mat-label>{{ 'admin.imageUrl' | t }}</mat-label>
+                <input matInput formControlName="imageUrl">
+                <mat-hint>{{ 'pf.imageHint' | t }}</mat-hint>
+                <mat-error>{{ errorText('imageUrl') }}</mat-error>
+              </mat-form-field>
+            </div>
+            <div class="image-main wide-preview"><app-product-image [src]="previewImage()" [alt]="'pf.productImages' | t"></app-product-image></div>
+          </div>
+
+          <div class="section" [hidden]="activeSection() !== 'specs'">
+            <fieldset class="specs">
+              <legend>{{ 'admin.specs' | t }}</legend>
+              @for (spec of specs.controls; track spec; let i = $index) {
+                <div class="spec" [formGroup]="$any(spec)">
+                  <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                    <mat-label>{{ 'admin.specKey' | t }}</mat-label>
+                    <input matInput formControlName="key">
+                  </mat-form-field>
+                  <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                    <mat-label>{{ 'admin.specValue' | t }}</mat-label>
+                    <input matInput formControlName="value">
+                  </mat-form-field>
+                  @if (canSave()) {
+                    <button type="button" class="btn-text" (click)="removeSpec(i)">{{ 'admin.removeSpec' | t }}</button>
+                  }
+                </div>
+              }
+              @if (canSave()) {
+                <button type="button" class="btn btn-outline btn-sm add-spec" (click)="addSpec()"><app-icon name="plus"></app-icon>{{ 'admin.addSpec' | t }}</button>
+              }
+            </fieldset>
+          </div>
+
+          <div class="section" [hidden]="activeSection() !== 'status'">
+            @if (isNew) {
+              <p class="muted">{{ 'pf.newStatusHint' | t }}</p>
+            } @else {
+              @if (status(); as currentStatus) {
+                <p class="preview">{{ 'pf.currentStatus' | t }}: <span class="pill" [class]="'pill ' + statusPillClass(currentStatus)">{{ 'prod.pill.' + currentStatus | t }}</span></p>
+              }
+
+              @if (!isArchived()) {
+                @if (readiness(); as ready) {
+                  <div class="readiness" [class.ready]="ready.isReady" data-testid="readiness">
+                    <h3>{{ 'readiness.title' | t }}</h3>
+                    @if (ready.isReady) {
+                      <p>{{ 'readiness.ready' | t }}</p>
+                    } @else {
+                      <p>{{ 'readiness.missing' | t }}</p>
+                      <ul>
+                        @for (field of ready.missingFields; track field) { <li>{{ missingLabel(field) }}</li> }
+                      </ul>
+                    }
+                  </div>
+                }
+              }
+
+              @if (statusActions().length > 0) {
+                <h3 class="group-title">{{ 'pf.statusActions' | t }}</h3>
+                <div class="adm-actions">
+                  @for (action of statusActions(); track action.status) {
+                    <button
+                      type="button"
+                      class="btn btn-sm"
+                      [class.btn-primary]="action.primary"
+                      [class.btn-outline]="!action.primary"
+                      [attr.data-action]="action.status"
+                      [disabled]="saving() || form.dirty || (action.status === 'Published' && readiness() !== null && !readiness()!.isReady)"
+                      (click)="changeStatus(action)"><app-icon [name]="action.icon"></app-icon>{{ action.labelKey | t }}</button>
+                  }
+                </div>
+              }
             }
           </div>
-        }
-        @if (canSave()) {
-          <button mat-stroked-button type="button" (click)="addSpec()">{{ 'admin.addSpec' | t }}</button>
-        }
-      </fieldset>
 
-      @if (canSave()) {
-        <div class="actions">
-          <button mat-flat-button color="primary" type="submit" [disabled]="saving()">{{ 'common.save' | t }}</button>
-          <a mat-button [routerLink]="back.path" [queryParams]="back.queryParams">{{ 'common.cancel' | t }}</a>
+          @if (!isNew) {
+            <div class="section" [hidden]="activeSection() !== 'history'" data-testid="audit">
+              <h3 class="group-title">{{ 'audit.title' | t }}</h3>
+              @if (audit().length === 0) {
+                <p class="muted">{{ 'audit.empty' | t }}</p>
+              } @else {
+                <div class="adm-scroll">
+                  <table class="adm-table">
+                    <thead>
+                      <tr>
+                        <th>{{ 'audit.when' | t }}</th>
+                        <th>{{ 'audit.who' | t }}</th>
+                        <th>{{ 'audit.action' | t }}</th>
+                        <th>{{ 'audit.field' | t }}</th>
+                        <th>{{ 'audit.from' | t }}</th>
+                        <th>{{ 'audit.to' | t }}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (entry of audit(); track entry.id) {
+                        <tr>
+                          <td>{{ entry.createdOnUtc | date: 'medium' }}</td>
+                          <td>{{ entry.userName }}</td>
+                          <td>{{ 'audit.' + entry.action | t }}</td>
+                          <td>{{ entry.field || ('common.noValue' | t) }}</td>
+                          <td>{{ entry.oldValue ?? ('common.noValue' | t) }}</td>
+                          <td>{{ entry.newValue ?? ('common.noValue' | t) }}</td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              }
+            </div>
+          }
         </div>
-      }
+      </div>
     </form>
-
-    @if (!isNew) {
-      <section class="history" data-testid="audit">
-        <h2>{{ 'audit.title' | t }}</h2>
-        @if (audit().length === 0) {
-          <p>{{ 'audit.empty' | t }}</p>
-        } @else {
-          <div class="scroll">
-            <table>
-              <thead>
-                <tr>
-                  <th>{{ 'audit.when' | t }}</th>
-                  <th>{{ 'audit.who' | t }}</th>
-                  <th>{{ 'audit.action' | t }}</th>
-                  <th>{{ 'audit.field' | t }}</th>
-                  <th>{{ 'audit.from' | t }}</th>
-                  <th>{{ 'audit.to' | t }}</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (entry of audit(); track entry.id) {
-                  <tr>
-                    <td>{{ entry.createdOnUtc | date: 'medium' }}</td>
-                    <td>{{ entry.userName }}</td>
-                    <td>{{ 'audit.' + entry.action | t }}</td>
-                    <td>{{ entry.field || ('common.noValue' | t) }}</td>
-                    <td>{{ entry.oldValue ?? ('common.noValue' | t) }}</td>
-                    <td>{{ entry.newValue ?? ('common.noValue' | t) }}</td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-        }
-      </section>
-    }
   }
 </section>

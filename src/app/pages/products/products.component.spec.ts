@@ -31,14 +31,14 @@ describe('ProductsComponent', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [ProductsComponent],
-      providers: [provideRouter([{ path: 'products', component: ProductsComponent }]), provideHttpClient(), provideHttpClientTesting()]
+      providers: [provideRouter([{ path: 'admin/products', component: ProductsComponent }]), provideHttpClient(), provideHttpClientTesting()]
     });
     httpTesting = TestBed.inject(HttpTestingController);
     router = TestBed.inject(Router);
   });
 
   it('loads using the query params from the URL and syncs filter changes back to the URL', async () => {
-    await router.navigateByUrl('/products?status=Draft&page=2&pageSize=50');
+    await router.navigateByUrl('/admin/products?status=Draft&page=2&pageSize=50');
     const fixture = TestBed.createComponent(ProductsComponent);
     fixture.detectChanges();
     await fixture.whenStable();

@@ -1,0 +1,59 @@
+<div class="admin-shell">
+  <aside class="sidebar" [class.open]="menuOpen()">
+    <a class="logo" routerLink="/admin">
+      <span class="logo-mark" aria-hidden="true"><app-icon name="cart"></app-icon></span>
+      <span class="logo-text">{{ 'app.name' | t }} <small>{{ 'adm.logo' | t }}</small></span>
+    </a>
+
+    <nav [attr.aria-label]="'adm.menu' | t">
+      @for (item of navItems(); track item.key) {
+        <a
+          class="nav-item"
+          [routerLink]="item.link"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: !!item.exact }"
+          (click)="menuOpen.set(false)">
+          <app-icon [name]="item.icon"></app-icon>
+          <span>{{ 'adm.nav.' + item.key | t }}</span>
+        </a>
+      }
+      @for (item of soonItems; track item.key) {
+        <span class="nav-item disabled" aria-disabled="true">
+          <app-icon [name]="item.icon"></app-icon>
+          <span>{{ 'adm.nav.' + item.key | t }}</span>
+          <em class="soon">{{ 'adm.soon' | t }}</em>
+        </span>
+      }
+    </nav>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <button type="button" class="menu-toggle" [attr.aria-label]="'adm.menu' | t" [attr.aria-expanded]="menuOpen()" (click)="menuOpen.set(!menuOpen())">
+        <app-icon name="menu"></app-icon>
+      </button>
+      <h1 class="page-title">{{ titleKey() | t }}</h1>
+
+      <div class="top-actions">
+        <a class="store-link" routerLink="/"><app-icon name="store"></app-icon><span>{{ 'adm.backToStore' | t }}</span></a>
+        <button type="button" class="lang-button" (click)="translation.toggle()">{{ 'nav.language' | t }}</button>
+        <a class="icon-btn" routerLink="/account" [queryParams]="{ tab: 'notifications' }" [attr.aria-label]="'adm.notifications' | t" [title]="'adm.notifications' | t">
+          <app-icon name="bell"></app-icon>
+        </a>
+        @if (currentUser(); as user) {
+          <div class="user-chip" [attr.aria-label]="'adm.userMenu' | t">
+            <span class="avatar" aria-hidden="true">{{ initials() }}</span>
+            <span class="user-text"><strong>{{ user.fullName }}</strong><small>{{ roleLabel() }}</small></span>
+          </div>
+          <button type="button" class="icon-btn" [attr.aria-label]="'account.logout' | t" [title]="'account.logout' | t" (click)="logout()">
+            <app-icon name="logout"></app-icon>
+          </button>
+        }
+      </div>
+    </header>
+
+    <main class="content">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

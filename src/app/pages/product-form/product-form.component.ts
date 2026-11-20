@@ -1,6 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { DatePipe } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormArray, FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -8,13 +9,15 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { IconComponent } from '../../components/icon/icon.component';
+import { ProductImageComponent } from '../../components/product-image/product-image.component';
 import { PageStateComponent } from '../../components/page-state/page-state.component';
 import { HasUnsavedChanges } from '../../guards/unsaved-changes.guard';
 import { TranslatePipe } from '../../i18n/translate.pipe';
 import { TranslationService } from '../../i18n/translation.service';
 import { BrandDto, CategoryDto } from '../../models/category-brand.model';
 import { PERMISSIONS } from '../../models/permissions';
-import { ProductAuditEntry, ProductDto, ProductReadiness, ProductRequest, ProductStatus } from '../../models/product.model';
+import { ProductAuditEntry, ProductDto, ProductReadiness, ProductRequest } from '../../models/product.model';
 import { AuthService } from '../../services/auth.service';
 import { BrandsApiService } from '../../services/brands-api.service';
 import { CategoriesApiService } from '../../services/categories-api.service';
@@ -23,18 +26,19 @@ import { ProductListStateService } from '../../services/product-list-state.servi
 import { ProductsApiService } from '../../services/products-api.service';
 import { ToastService } from '../../services/toast.service';
 import { applyServerErrors } from '../../utils/server-errors';
+import { StatusAction, statusActionsFor, statusPillClass, stockLevel } from '../../utils/product-status';
 
-export interface StatusAction {
-  status: ProductStatus;
-  labelKey: string;
-  primary: boolean;
-}
+export type { StatusAction };
+
+export type ProductSection = 'basic' | 'pricing' | 'inventory' | 'images' | 'specs' | 'status' | 'history';
 
 @Component({
   selector: 'app-product-form',
   standalone: true,
   imports: [
     DatePipe,
+    IconComponent,
+    ProductImageComponent,
     ReactiveFormsModule,
     RouterLink,
     MatButtonModule,
@@ -118,32 +122,39 @@ export class ProductFormComponent implements OnInit, HasUnsavedChanges {
     return options;
   });
 
-  protected readonly statusActions = computed<StatusAction[]>(() => {
-    const current = this.status();
-    if (this.isNew || !current) {
-      return [];
-    }
+  protected readonly statusActions = computed<StatusAction[]>(() =>
+    this.isNew ? [] : statusActionsFor(this.status(), (permission) => this.auth.hasPermission(permission))
+  );
 
-    const canPublish = this.auth.hasPermission(PERMISSIONS.productsPublish);
-    const canArchive = this.auth.hasPermission(PERMISSIONS.productsArchive);
-    const canDeactivate = canPublish || this.auth.hasPermission(PERMISSIONS.productsEdit);
-    const actions: StatusAction[] = [];
-
-    if (current === 'Archived') {
-      if (canArchive) { actions.push({ status: 'Inactive', labelKey: 'product.restore', primary: true }); }
-      return actions;
-    }
-    if ((current === 'Draft' || current === 'Inactive') && canPublish) {
-      actions.push({ status: 'Published', labelKey: 'product.publish', primary: true });
-    }
-    if ((current === 'Draft' || current === 'Published') && canDeactivate) {
-      actions.push({ status: 'Inactive', labelKey: 'product.deactivate', primary: false });
-    }
-    if (canArchive) {
-      actions.push({ status: 'Archived', labelKey: 'product.archive', primary: false });
-    }
-    return actions;
+  protected readonly activeSection = signal<ProductSection>('basic');
+  protected readonly sections = computed<{ id: ProductSection; labelKey: string }[]>(() => {
+    const list: { id: ProductSection; labelKey: string }[] = [
+      { id: 'basic', labelKey: 'pf.basic' },
+      { id: 'pricing', labelKey: 'pf.pricing' },
+      { id: 'inventory', labelKey: 'pf.inventory' },
+      { id: 'images', labelKey: 'pf.images' },
+      { id: 'specs', labelKey: 'pf.specs' },
+      { id: 'status', labelKey: 'pf.status' }
+    ];
+    return this.isNew ? list : [...list, { id: 'history', labelKey: 'pf.history' }];
   });
+
+  protected readonly formValue = toSignal(this.form.valueChanges, { initialValue: this.form.getRawValue() });
+  protected readonly discountPercent = computed(() => {
+    const value = this.formValue();
+    const price = Number(value.price);
+    const original = Number(value.originalPrice);
+    return value.price != null && value.originalPrice != null && original > 0 && price < original
+      ? Math.round((1 - price / original) * 100)
+      : 0;
+  });
+  protected readonly previewImage = computed(() => (this.formValue().imageUrl ?? '').trim());
+  protected readonly stockPreview = computed(() => {
+    const quantity = Number(this.formValue().stockQuantity ?? 0);
+    return quantity > 0 ? 'InStock' : 'OutOfStock';
+  });
+  protected readonly lowStock = computed(() => stockLevel({ status: 'Published', stockQuantity: Number(this.formValue().stockQuantity ?? 0) }) === 'low');
+  protected readonly statusPillClass = statusPillClass;
 
   protected get specs(): FormArray {
     return this.form.controls.specs;
@@ -164,8 +175,12 @@ export class ProductFormComponent implements OnInit, HasUnsavedChanges {
     }
   }
 
+  protected setSection(section: ProductSection): void {
+    this.activeSection.set(section);
+  }
+
   protected backLink(): { path: string[]; queryParams: Record<string, unknown> } {
-    return { path: ['/products'], queryParams: this.listState.queryParams };
+    return { path: ['/admin/products'], queryParams: this.listState.queryParams };
   }
 
   protected addSpec(key = '', value = ''): void {
@@ -212,7 +227,7 @@ export class ProductFormComponent implements OnInit, HasUnsavedChanges {
       this.applyProduct(response.data);
       this.toast.showSuccess(response.message || this.translation.t('product.saved'));
       if (this.isNew) {
-        await this.router.navigate(['/products', response.data.id]);
+        await this.router.navigate(['/admin/products', response.data.id]);
       } else {
         await this.loadSideData(response.data.id);
       }

@@ -1,12 +1,12 @@
 import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { MatButtonModule } from '@angular/material/button';
+import { TranslatePipe } from '../../i18n/translate.pipe';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
 	selector: 'app-nav-user',
 	standalone: true,
-	imports: [RouterLink, MatButtonModule],
+	imports: [RouterLink, TranslatePipe],
 	templateUrl: './nav-user.component.html',
 	styleUrl: './nav-user.component.css'
 })

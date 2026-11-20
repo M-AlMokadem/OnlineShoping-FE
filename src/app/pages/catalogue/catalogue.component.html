@@ -1,95 +1,113 @@
 <section class="catalogue">
-  <header class="intro">
-    <h1>{{ 'home.title' | t }}</h1>
-    <p>{{ 'home.subtitle' | t }}</p>
-  </header>
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <a routerLink="/">{{ 'nav.home' | t }}</a>
+    <span>&rsaquo;</span>
+    @if (selectedCategory()) {
+      <a routerLink="/catalogue">{{ 'nav.catalogue' | t }}</a>
+      <span>&rsaquo;</span>
+    }
+    <span>{{ title() }}</span>
+  </nav>
 
-  <div class="filters" role="search">
-    <app-search-field
-      [label]="'catalogue.search' | t"
-      [value]="filters.searchedValue ?? ''"
-      (valueChange)="filters.searchedValue = $event"
-      (submitted)="search()"></app-search-field>
-
-    <label>{{ 'catalogue.brand' | t }}
-      <select name="brand" [(ngModel)]="filters.brandId" (ngModelChange)="search()">
-        <option value="">{{ 'catalogue.all' | t }}</option>
-        @for (brand of brands(); track brand.id) { <option [value]="brand.id">{{ brand.name }}</option> }
+  <div class="heading">
+    <h1>{{ title() }} <span class="total">({{ totalCount() }})</span></h1>
+    <label class="sort">
+      {{ 'catalogue.sortBy' | t }}
+      <select name="sort" [ngModel]="sort()" (ngModelChange)="changeSort($event)">
+        @for (option of sortOptions; track option.value) { <option [value]="option.value">{{ option.label | t }}</option> }
       </select>
     </label>
-
-    <label>{{ 'catalogue.category' | t }}
-      <select name="category" [(ngModel)]="filters.categoryId" (ngModelChange)="search()">
-        <option value="">{{ 'catalogue.all' | t }}</option>
-        @for (category of categories(); track category.id) { <option [value]="category.id">{{ categoryName(category) }}</option> }
-      </select>
-    </label>
-
-    <label>{{ 'catalogue.availability' | t }}
-      <select name="availability" [(ngModel)]="filters.availability" (ngModelChange)="search()">
-        <option value="">{{ 'catalogue.all' | t }}</option>
-        @for (availability of availabilities; track availability) { <option [value]="availability">{{ 'availability.' + availability | t }}</option> }
-      </select>
-    </label>
-
-    <label>{{ 'catalogue.minPrice' | t }}
-      <input type="number" min="0" name="minPrice" [(ngModel)]="filters.minPrice" (change)="search()" (keyup.enter)="search()">
-    </label>
-
-    <label>{{ 'catalogue.maxPrice' | t }}
-      <input type="number" min="0" name="maxPrice" [(ngModel)]="filters.maxPrice" (change)="search()" (keyup.enter)="search()">
-    </label>
-
-    <button mat-button type="button" (click)="reset()">{{ 'catalogue.reset' | t }}</button>
   </div>
 
-  @if (compare.count() > 0) {
-    <div class="compare-bar">
-      <span>{{ compare.count() }} {{ 'compare.selected' | t }}</span>
-      <a mat-flat-button routerLink="/compare" [class.disabled]="compare.count() < 2">{{ 'compare.open' | t }}</a>
-      <button mat-button type="button" (click)="compare.clear()">{{ 'compare.clear' | t }}</button>
-    </div>
+  @if (filters().searchedValue) {
+    <p class="search-chip">
+      {{ 'catalogue.searchFor' | t }} <strong>"{{ filters().searchedValue }}"</strong>
+      <button type="button" (click)="clearSearch()" [attr.aria-label]="'common.clear' | t">&times;</button>
+    </p>
   }
 
-  @if (loading()) {
-    <app-page-state kind="loading" [title]="'catalogue.loading' | t"></app-page-state>
-  } @else if (failed()) {
-    <app-page-state kind="error" [title]="'catalogue.error' | t" (retry)="load()"></app-page-state>
-  } @else if (products().length === 0) {
-    <app-page-state kind="empty" [title]="'catalogue.empty' | t"></app-page-state>
-  } @else {
-    <p class="count">{{ totalCount() }} {{ 'catalogue.results' | t }}</p>
-    <div class="grid">
-      @for (product of products(); track product.id) {
-        <mat-card class="card">
-          @if (product.imageUrl) {
-            <img class="thumb" [src]="product.imageUrl" [alt]="name(product)">
+  <div class="layout">
+    <aside class="sidebar card" [attr.aria-label]="'catalogue.filters' | t">
+      <div class="filter-group">
+        <h3>{{ 'catalogue.category' | t }}</h3>
+        <label class="check">
+          <input type="checkbox" [checked]="!filters().categoryId" (change)="selectCategory('')">
+          <span>{{ 'catalogue.allProducts' | t }}</span>
+        </label>
+        @for (category of categories(); track category.id) {
+          <label class="check" [class.sub]="!!category.parentId">
+            <input type="checkbox" [checked]="filters().categoryId === category.id" (change)="selectCategory(category.id)">
+            <span>{{ categoryName(category) }}</span>
+            <small>({{ category.productCount }})</small>
+          </label>
+        }
+      </div>
+
+      <div class="filter-group">
+        <h3>{{ 'catalogue.priceRange' | t }}</h3>
+        <div class="price-inputs">
+          <input type="number" min="0" name="minPrice" [placeholder]="'catalogue.minPrice' | t" [attr.aria-label]="'catalogue.minPrice' | t"
+            [(ngModel)]="minPriceInput" (change)="applyPrice()" (keyup.enter)="applyPrice()">
+          <span>&ndash;</span>
+          <input type="number" min="0" name="maxPrice" [placeholder]="'catalogue.maxPrice' | t" [attr.aria-label]="'catalogue.maxPrice' | t"
+            [(ngModel)]="maxPriceInput" (change)="applyPrice()" (keyup.enter)="applyPrice()">
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <h3>{{ 'catalogue.brand' | t }}</h3>
+        <input class="brand-search" type="search" name="brandSearch" [placeholder]="'catalogue.searchBrand' | t"
+          [attr.aria-label]="'catalogue.searchBrand' | t" [ngModel]="brandSearch()" (ngModelChange)="brandSearch.set($event)">
+        @for (brand of visibleBrands(); track brand.id) {
+          <label class="check">
+            <input type="checkbox" [checked]="filters().brandId === brand.id" (change)="selectBrand(brand.id)">
+            <span>{{ brand.name }}</span>
+            <small>({{ brand.productCount }})</small>
+          </label>
+        }
+      </div>
+
+      <div class="filter-group">
+        <h3>{{ 'catalogue.availability' | t }}</h3>
+        @for (availability of availabilities; track availability) {
+          <label class="check">
+            <input type="checkbox" [checked]="filters().availability === availability" (change)="selectAvailability(availability)">
+            <span>{{ 'availability.' + availability | t }}</span>
+          </label>
+        }
+      </div>
+
+      <button type="button" class="btn btn-outline reset" (click)="reset()">{{ 'catalogue.reset' | t }}</button>
+    </aside>
+
+    <div class="results">
+      @if (compare.count() > 0) {
+        <div class="compare-bar">
+          <span>{{ compare.count() }} {{ 'compare.selected' | t }}</span>
+          <a class="btn btn-primary" routerLink="/compare" [class.disabled]="compare.count() < 2">{{ 'compare.open' | t }}</a>
+          <button type="button" class="btn btn-outline" (click)="compare.clear()">{{ 'compare.clear' | t }}</button>
+        </div>
+      }
+
+      @if (loading()) {
+        <app-page-state kind="loading" [title]="'catalogue.loading' | t"></app-page-state>
+      } @else if (failed()) {
+        <app-page-state kind="error" [title]="'catalogue.error' | t" (retry)="load()"></app-page-state>
+      } @else if (products().length === 0) {
+        <app-page-state kind="empty" [title]="'catalogue.empty' | t"></app-page-state>
+      } @else {
+        <div class="grid">
+          @for (product of products(); track product.id) {
+            <app-product-card [product]="product"></app-product-card>
           }
-          <mat-card-content>
-            <p class="brand">{{ product.brandName }} · {{ translation.localized(product.categoryName, product.categoryNameAr) }}</p>
-            <h2>{{ name(product) }}</h2>
-            <p class="price">
-              {{ product.price | currency: product.currency : 'symbol' : '1.0-0' }}
-              @if (product.originalPrice) {
-                <s class="original">{{ product.originalPrice | currency: product.currency : 'symbol' : '1.0-0' }}</s>
-              }
-            </p>
-            <p class="availability" [class.out]="product.availability === 'OutOfStock'">{{ 'availability.' + product.availability | t }}</p>
-          </mat-card-content>
-          <mat-card-actions>
-            <a mat-flat-button [routerLink]="['/catalogue', product.id]">{{ 'catalogue.viewDetails' | t }}</a>
-            <button mat-button type="button" (click)="toggleCompare(product)">
-              {{ (compare.has(product.id) ? 'details.removeFromCompare' : 'compare.add') | t }}
-            </button>
-          </mat-card-actions>
-        </mat-card>
+        </div>
+
+        <div class="pager">
+          <button type="button" class="btn btn-outline" (click)="goTo(pageNumber() - 1)" [disabled]="pageNumber() <= 1">{{ 'common.previous' | t }}</button>
+          <span>{{ 'common.page' | t }} {{ pageNumber() }} {{ 'common.of' | t }} {{ totalPages() }}</span>
+          <button type="button" class="btn btn-outline" (click)="goTo(pageNumber() + 1)" [disabled]="pageNumber() >= totalPages()">{{ 'common.next' | t }}</button>
+        </div>
       }
     </div>
-
-    <div class="pager">
-      <button mat-button type="button" (click)="goTo(pageNumber() - 1)" [disabled]="pageNumber() <= 1">{{ 'common.previous' | t }}</button>
-      <span>{{ 'common.page' | t }} {{ pageNumber() }} {{ 'common.of' | t }} {{ totalPages() }}</span>
-      <button mat-button type="button" (click)="goTo(pageNumber() + 1)" [disabled]="pageNumber() >= totalPages()">{{ 'common.next' | t }}</button>
-    </div>
-  }
+  </div>
 </section>

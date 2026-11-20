@@ -1,0 +1,40 @@
+@let p = product();
+@let discount = discountPercent(p);
+<article class="product-card card">
+  <div class="media">
+    <a class="image-link" [routerLink]="['/catalogue', p.id]" [attr.aria-label]="translation.localized(p.name, p.nameAr)">
+      <app-product-image [src]="p.imageUrl" [alt]="translation.localized(p.name, p.nameAr)"></app-product-image>
+    </a>
+    <div class="badges">
+      @if (discount > 0) { <span class="badge">-{{ discount }}%</span> }
+      @if (isNew(p)) { <span class="badge badge-new">{{ 'product.new' | t }}</span> }
+    </div>
+    <button type="button" class="wish" [class.active]="wishlist.has(p.id)" (click)="toggleWishlist()"
+      [attr.aria-pressed]="wishlist.has(p.id)" [attr.aria-label]="'wishlist.toggle' | t">
+      <app-icon name="heart" [filled]="wishlist.has(p.id)"></app-icon>
+    </button>
+  </div>
+  <div class="body">
+    <p class="brand">{{ p.brandName }}</p>
+    <a class="name" [routerLink]="['/catalogue', p.id]">{{ translation.localized(p.name, p.nameAr) }}</a>
+    <div class="price-row">
+      <span class="price">{{ p.price | currency: p.currency : 'EGP ' : '1.0-0' }}</span>
+      @if (p.originalPrice && p.originalPrice > (p.price ?? 0)) {
+        <span class="price-original">{{ p.originalPrice | currency: p.currency : 'EGP ' : '1.0-0' }}</span>
+      }
+    </div>
+    <div class="actions">
+      @if (showCompare()) {
+        <button type="button" class="compare" [class.active]="compare.has(p.id)" (click)="toggleCompare()" [attr.aria-pressed]="compare.has(p.id)">
+          <app-icon name="compare"></app-icon>
+          {{ (compare.has(p.id) ? 'details.removeFromCompare' : 'compare.add') | t }}
+        </button>
+      } @else {
+        <span class="stock" [class.out-of-stock]="p.availability === 'OutOfStock'" [class.in-stock]="p.availability !== 'OutOfStock'">{{ 'availability.' + p.availability | t }}</span>
+      }
+      <button type="button" class="cart-btn" [disabled]="p.availability === 'OutOfStock' || !p.price" (click)="addToCart()" [attr.aria-label]="'cart.add' | t">
+        <app-icon name="cart"></app-icon>
+      </button>
+    </div>
+  </div>
+</article>

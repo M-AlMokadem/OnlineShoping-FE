@@ -1,20 +1,20 @@
-<section class="page">
-  <header>
-    <h1>{{ 'categories.title' | t }}</h1>
-    <button mat-flat-button type="button" (click)="openNew()">{{ 'category.new' | t }}</button>
-  </header>
+<section class="adm-page">
+  <div class="adm-head">
+    <h2>{{ 'categories.title' | t }}</h2>
+    <button type="button" class="btn btn-primary" (click)="openNew()"><app-icon name="plus"></app-icon>{{ 'category.new' | t }}</button>
+  </div>
 
   <mat-checkbox [checked]="includeArchived()" (change)="toggleArchived($event.checked)">{{ 'category.showArchived' | t }}</mat-checkbox>
 
   @if (formOpen()) {
-    <form class="form" [formGroup]="form" (ngSubmit)="save()">
+    <form class="card adm-card adm-form" [formGroup]="form" (ngSubmit)="save()">
       <h2>{{ (editing() ? 'category.edit' : 'category.new') | t }}</h2>
       @if (otherErrors().length > 0) {
-        <ul class="notice error">
+        <ul class="adm-notice error">
           @for (message of otherErrors(); track message) { <li>{{ message }}</li> }
         </ul>
       }
-      <div class="fields">
+      <div class="adm-fields">
         <mat-form-field appearance="outline">
           <mat-label>{{ 'admin.nameEn' | t }}</mat-label>
           <input matInput formControlName="name">
@@ -50,9 +50,9 @@
         </mat-form-field>
       </div>
       <mat-checkbox formControlName="isActive">{{ 'common.active' | t }}</mat-checkbox>
-      <div class="actions">
-        <button mat-flat-button color="primary" type="submit" [disabled]="saving()">{{ 'common.save' | t }}</button>
-        <button mat-button type="button" (click)="cancel()">{{ 'common.cancel' | t }}</button>
+      <div class="adm-actions">
+        <button class="btn btn-primary" type="submit" [disabled]="saving()">{{ 'common.save' | t }}</button>
+        <button class="btn btn-outline" type="button" (click)="cancel()">{{ 'common.cancel' | t }}</button>
       </div>
     </form>
   }
@@ -64,8 +64,8 @@
   } @else if (categories().length === 0) {
     <app-page-state kind="empty" [title]="'categories.empty' | t"></app-page-state>
   } @else {
-    <div class="scroll">
-      <table>
+    <div class="card adm-scroll">
+      <table class="adm-table">
         <thead>
           <tr>
             <th>{{ 'category.order' | t }}</th>
@@ -78,27 +78,27 @@
         </thead>
         <tbody>
           @for (category of categories(); track category.id) {
-            <tr [class.archived]="category.isArchived">
+            <tr [class.is-archived]="category.isArchived">
               <td>{{ category.displayOrder }}</td>
               <td>{{ category.name }}</td>
               <td>{{ category.nameAr || ('common.noValue' | t) }}</td>
               <td>{{ category.productCount }}</td>
               <td>
-                <span class="badge" [class.off]="!category.isActive || category.isArchived">
+                <span class="pill" [class]="'pill ' + (category.isArchived ? 'pill-dark' : category.isActive ? 'pill-success' : 'pill-muted')">
                   {{ (category.isArchived ? 'common.archived' : category.isActive ? 'common.active' : 'common.inactive') | t }}
                 </span>
               </td>
               <td class="row-actions">
                 @if (!category.isArchived) {
-                  <button mat-button type="button" [attr.aria-label]="'category.moveUp' | t" [disabled]="!canMove(category, -1)" (click)="move(category, -1)">&uarr;</button>
-                  <button mat-button type="button" [attr.aria-label]="'category.moveDown' | t" [disabled]="!canMove(category, 1)" (click)="move(category, 1)">&darr;</button>
-                  <button mat-button type="button" (click)="edit(category)">{{ 'common.edit' | t }}</button>
-                  <button mat-button type="button" (click)="setActive(category, !category.isActive)">
+                  <button class="btn-text" type="button" [attr.aria-label]="'category.moveUp' | t" [disabled]="!canMove(category, -1)" (click)="move(category, -1)">&uarr;</button>
+                  <button class="btn-text" type="button" [attr.aria-label]="'category.moveDown' | t" [disabled]="!canMove(category, 1)" (click)="move(category, 1)">&darr;</button>
+                  <button class="btn-text" type="button" (click)="edit(category)">{{ 'common.edit' | t }}</button>
+                  <button class="btn-text" type="button" (click)="setActive(category, !category.isActive)">
                     {{ (category.isActive ? 'common.deactivate' : 'common.activate') | t }}
                   </button>
-                  <button mat-button type="button" (click)="archive(category)">{{ 'category.archive' | t }}</button>
+                  <button class="btn-text" type="button" (click)="archive(category)">{{ 'category.archive' | t }}</button>
                 } @else {
-                  <button mat-button type="button" (click)="restore(category)">{{ 'category.restore' | t }}</button>
+                  <button class="btn-text" type="button" (click)="restore(category)">{{ 'category.restore' | t }}</button>
                 }
               </td>
             </tr>

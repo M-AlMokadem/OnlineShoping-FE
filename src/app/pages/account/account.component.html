@@ -1,0 +1,60 @@
+<section class="account">
+  <aside class="menu card">
+    <div class="profile">
+      <span class="avatar">{{ initial() }}</span>
+      <strong>{{ user()?.fullName }}</strong>
+      <small>{{ user()?.email }}</small>
+    </div>
+    <nav [attr.aria-label]="'account.title' | t">
+      @for (entry of tabs; track entry.id) {
+        <a [routerLink]="[]" [queryParams]="{ tab: entry.id }" [class.active]="tab() === entry.id">
+          <app-icon [name]="entry.icon"></app-icon>{{ entry.label | t }}
+        </a>
+      }
+      <button type="button" (click)="logout()"><app-icon name="logout"></app-icon>{{ 'account.logout' | t }}</button>
+    </nav>
+  </aside>
+
+  <div class="content">
+    <h1>{{ activeLabel() | t }}</h1>
+
+    @switch (tab()) {
+      @case ('orders') {
+        <div class="status-tabs" role="tablist">
+          @for (status of statuses; track status) {
+            <button type="button" role="tab" [class.active]="orderStatus() === status" [attr.aria-selected]="orderStatus() === status" (click)="orderStatus.set(status)">
+              {{ 'orders.' + status | t }}
+            </button>
+          }
+        </div>
+        <div class="empty card">
+          <app-icon name="package"></app-icon>
+          <h2>{{ 'orders.empty' | t }}</h2>
+          <p>{{ 'orders.emptyHint' | t }}</p>
+          <a class="btn btn-primary" routerLink="/catalogue">{{ 'home.shopNow' | t }}</a>
+        </div>
+      }
+      @case ('wishlist') {
+        @if (wishlist.items().length === 0) {
+          <div class="empty card">
+            <app-icon name="heart"></app-icon>
+            <h2>{{ 'wishlist.empty' | t }}</h2>
+            <a class="btn btn-primary" routerLink="/catalogue">{{ 'home.shopNow' | t }}</a>
+          </div>
+        } @else {
+          <div class="grid">
+            @for (product of wishlist.items(); track product.id) {
+              <app-product-card [product]="product" [showCompare]="false"></app-product-card>
+            }
+          </div>
+        }
+      }
+      @default {
+        <div class="empty card">
+          <app-icon name="clipboard"></app-icon>
+          <h2>{{ 'common.comingSoon' | t }}</h2>
+        </div>
+      }
+    }
+  </div>
+</section>
